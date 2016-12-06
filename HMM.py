@@ -73,6 +73,19 @@ class HMM:
             sequences.append((sequence, max_prob))
         return sequences
 
+    def forward(self, observations):
+        sequences = []
+        for i in np.arange(len(observations)):
+            T = len(observations[i])
+            c = np.zeros([T])
+            alpha = np.zeros([self.N, T])
+            index_obs = self.name_observations.index(observations[i][0])
+            alpha[:, 0] = self.A[0, :] * self.B[:, index_obs]
+        return sequences
+
+    # def baum_welch(self, A, B, observations):
+
+
 states = ['INIT', 'Onset', 'Mid', 'End', 'FINAL']
 observations = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7']
 A = csr_matrix([[0, 1, 0, 0, 0],
@@ -100,4 +113,5 @@ seq = [['C1', 'C2', 'C3', 'C4', 'C4', 'C6', 'C7'],
 h = HMM(A1, B1, states, observations)
 # h = HMM(A, B, states, observations)
 # print(h.gen_sequence(3))
-print(h.viterbi(seq))
+# print(h.viterbi(seq))
+print(h.forward(seq))
