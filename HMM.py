@@ -135,6 +135,8 @@ class HMM:
             for obs in observations:
                 alpha, log_prob_obs, c = self.forward(obs)
                 beta = self.backward(obs, c)
+                # print(alpha)
+                # print(beta)
                 log_likelihood += log_prob_obs
                 T = len(obs)
                 w_k = 1.0 / -(log_prob_obs + np.log(T))
@@ -150,13 +152,19 @@ class HMM:
                         xi[i, :, t] = alpha[i, t] * self.A[i, :] * \
                             self.B[:, index_obs] * beta[:, t + 1]
                 # si_sj_all += w_k * xi.sum(2)
-                a_bar_num += w_k * xi[:, :, :T - 1].sum(2)
+                # a_bar_num += w_k * xi[:, :, :T - 1].sum(2)
+                a_bar_num += w_k * xi.sum(2)
                 B_bar = np.zeros([self.N, self.M])
                 for k in np.arange(self.M):
                     indicator = np.array(
                         [self.name_observations[k] == x for x in obs])
                     B_bar[:, k] = gamma.T[indicator, :].sum(0)
                 b_bar_num += w_k * B_bar
+                # print(alpha)
+                # print(beta)
+                # print(xi)
+                # print(a_bar_num)
+                # print(a_bar_den)
             # update A
             A_bar = np.zeros([self.N, self.N])
             A_bar[0, :] = pi_bar / np.sum(pi_bar)
@@ -170,9 +178,11 @@ class HMM:
                 else:
                     b_bar_num[i, :] = b_bar_num[i, :]
             self.B = b_bar_num
+            print(log_likelihood)
             log_likelihoods.append(log_likelihood)
-            if epoch > 1 and log_likelihoods[epoch - 1] == log_likelihood:
-                print('plateaued')
+            # print(self.A)
+            if epoch > 1 and log_likelihoods[epoch - 1] <= log_likelihood:
+                print('not improving')
                 break
         return self
 
@@ -361,5 +371,5 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
 # print(h.forward(seq))
 h1 = HMM(A_ini, B_ini, states, observations)
 h2 = h1.baum_welch(seq_train)
-print(h2.A)
-print(h2.B)
+print('A', h2.A)
+print('B', h2.B)
