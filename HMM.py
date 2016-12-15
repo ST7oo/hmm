@@ -1,10 +1,11 @@
 import numpy as np
 from scipy.sparse import csr_matrix, lil_matrix
 from operator import itemgetter
+import datetime as dt
+import timeit
 
 
 class HMM:
-
     def __init__(self, A=None, B=None, name_states=None, name_observations=None):
         self.A = A
         self.B = B
@@ -30,6 +31,7 @@ class HMM:
     def gen_sequence(self, num_sequences=1):
         def draw_from(probabilities):
             return np.random.choice(len(probabilities), 1, p=probabilities)[0]
+
         sequences = []
         for i in np.arange(0, num_sequences):
             # states = []
@@ -114,57 +116,53 @@ class HMM:
         # return sequences
 
     def baum_welch(self, observations, max_iter=20):
-        # best_A = self.A.copy()
-        # best_B = self.B.copy()
         log_likelihoods = []
-        # val_log_likelihoods = []
         for epoch in np.arange(max_iter):
             log_likelihood = 0
             b_bar_den = np.zeros([self.N])
             a_bar_den = np.zeros([self.N])
-            # si_sj_all = np.zeros([self.N, self.N])
             a_bar_num = np.zeros([self.N, self.N])
             pi_bar = np.zeros([self.N])
             b_bar_num = np.zeros([self.N, self.M])
             for obs in observations:
                 alpha, log_prob_obs, c = self.forward(obs)
                 beta = self.backward(obs, c)
-                # print(alpha)
-                # print(beta)
                 log_likelihood += log_prob_obs
                 T = len(obs)
                 index_obs = self.index_observations(obs)
-                w_k = 1.0 / -(log_prob_obs + np.log(T))
+                # w = 1.0 / -(log_prob_obs + np.log(T))
                 gamma_raw = alpha * beta
                 gamma = gamma_raw / gamma_raw.sum(0)
-                pi_bar += w_k * gamma[:, 0]
-                b_bar_den += w_k * gamma.sum(1)
-                a_bar_den += w_k * gamma[:, :T - 1].sum(1)
+                # pi_bar += w * gamma[:, 0]
+                pi_bar += gamma[:, 0]
+                # b_bar_den += w * gamma.sum(1)
+                b_bar_den += gamma.sum(1)
+                # a_bar_den += w * gamma[:, :T-1].sum(1)
+                # a_bar_den += gamma[:, :T-1].sum(1)
+                # a_bar_den += w * gamma.sum(1)
+                a_bar_den += gamma.sum(1)
                 xi = np.zeros([self.N, self.N, T - 1])
                 for t in np.arange(T - 1):
                     for i in np.arange(self.N):
-                        xi[i, :, t] = alpha[i, t] * self.A[i, :] * self.B[:, index_obs[t+1]] * beta[:, t + 1]
-                # si_sj_all += w_k * xi.sum(2)
-                # a_bar_num += w_k * xi[:, :, :T - 1].sum(2)
-                a_bar_num += w_k * xi.sum(2)
+                        xi[i, :, t] = alpha[i, t] * self.A[i, :] * self.B[:, index_obs[t + 1]] * beta[:, t + 1]
+                # a_bar_num += w * xi[:, :, :T - 1].sum(2)
+                # a_bar_num += w * xi.sum(2)
+                a_bar_num += xi.sum(2)
                 B_bar = np.zeros([self.N, self.M])
                 for k in np.arange(self.M):
                     indicator = np.array([self.name_observations[k] == x for x in obs])
                     B_bar[:, k] = gamma.T[indicator, :].sum(0)
-                b_bar_num += w_k * B_bar
-                # print(alpha)
-                # print(beta)
-                # print(xi)
-                # print(a_bar_num)
-                # print(a_bar_den)
+                # b_bar_num += w * B_bar
+                b_bar_num += B_bar
             # update A
             A_bar = np.zeros([self.N, self.N])
             A_bar[0, :] = pi_bar / np.sum(pi_bar)
             for i in np.arange(1, self.N - 1):
                 A_bar[i, :] = a_bar_num[i, :] / a_bar_den[i]
+            # A_bar[self.N-2, self.N-1] = 1 - A_bar[self.N-2].sum() # correct final silent state
             self.A = A_bar
             # update B
-            for i in np.arange(self.N):
+            for i in np.arange(1, self.N - 1):
                 if b_bar_den[i] > 0:
                     b_bar_num[i, :] = b_bar_num[i, :] / b_bar_den[i]
                 else:
@@ -172,10 +170,10 @@ class HMM:
             self.B = b_bar_num
             print(log_likelihood)
             log_likelihoods.append(log_likelihood)
-            # print(self.A)
-            if epoch > 1 and log_likelihoods[epoch - 1] <= log_likelihood:
+            if epoch > 1 and log_likelihood >= log_likelihoods[epoch - 1]:
                 print('not improving')
                 break
+        self.A[self.N - 2, self.N - 1] = 1 - self.A[self.N - 2].sum()  # correct final silent state
         return self
 
 
@@ -218,7 +216,7 @@ seq1 = [['C1', 'C2', 'C3', 'C4', 'C4', 'C6', 'C7'],
 seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C1', 'C5', 'C7'],
              ['C2', 'C1', 'C3', 'C1', 'C1', 'C4', 'C4', 'C4', 'C4', 'C5', 'C4', 'C4', 'C4',
-                 'C4', 'C5', 'C5', 'C3', 'C4', 'C4', 'C3', 'C3', 'C5', 'C7', 'C6', 'C7'],
+              'C4', 'C5', 'C5', 'C3', 'C4', 'C4', 'C3', 'C3', 'C5', 'C7', 'C6', 'C7'],
              ['C2', 'C1', 'C5', 'C4', 'C4', 'C4', 'C4',
               'C4', 'C4', 'C4', 'C5', 'C4', 'C4', 'C6'],
              ['C3', 'C4', 'C7', 'C7'],
@@ -226,7 +224,7 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C5', 'C4', 'C4',
               'C4', 'C5', 'C4', 'C3', 'C3', 'C4', 'C4', 'C4', 'C3', 'C6'],
              ['C3', 'C3', 'C1', 'C4', 'C3', 'C5',
-                 'C4', 'C4', 'C4', 'C4', 'C4', 'C6'],
+              'C4', 'C4', 'C4', 'C4', 'C4', 'C6'],
              ['C2', 'C3', 'C5', 'C4', 'C7'],
              ['C2', 'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C6'],
              ['C1', 'C4', 'C6', 'C7'],
@@ -238,8 +236,10 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
               'C4', 'C4', 'C4', 'C3', 'C4', 'C5', 'C7'],
              ['C1', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C4', 'C6', 'C7'],
              ['C1', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C6'],
-             ['C1', 'C3', 'C4', 'C4', 'C3', 'C5', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3',
-              'C5', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C7'],
+             ['C1', 'C3', 'C4', 'C4', 'C3', 'C5', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C4', 'C4',
+              'C4', 'C4', 'C4', 'C4', 'C4', 'C3',
+              'C5', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4',
+              'C4', 'C4', 'C4', 'C4', 'C7'],
              ['C1', 'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C4',
               'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C6', 'C7'],
              ['C3', 'C4', 'C6'],
@@ -262,11 +262,15 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
               'C3', 'C3', 'C3', 'C4', 'C4', 'C4', 'C7', 'C4'],
              ['C1', 'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C7', 'C4'],
              ['C3', 'C1', 'C4', 'C4', 'C4', 'C5', 'C4', 'C4', 'C4', 'C4', 'C7'],
-             ['C2', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C5', 'C4', 'C5', 'C4', 'C4',
-              'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4', 'C4', 'C4', 'C3', 'C6'],
+             ['C2', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C5', 'C4', 'C5', 'C4',
+              'C4',
+              'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4', 'C4', 'C4', 'C3',
+              'C6'],
              ['C1', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C6'],
-             ['C2', 'C1', 'C4', 'C4', 'C5', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C4',
-              'C4', 'C3', 'C4', 'C5', 'C4', 'C4', 'C4', 'C4', 'C3', 'C3', 'C5', 'C4', 'C4', 'C4', 'C4', 'C5', 'C4', 'C4'],
+             ['C2', 'C1', 'C4', 'C4', 'C5', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4',
+              'C4', 'C4',
+              'C4', 'C3', 'C4', 'C5', 'C4', 'C4', 'C4', 'C4', 'C3', 'C3', 'C5', 'C4', 'C4', 'C4', 'C4', 'C5', 'C4',
+              'C4'],
              ['C1', 'C3', 'C4', 'C3', 'C4', 'C4', 'C4', 'C4', 'C3', 'C6', 'C6'],
              ['C1', 'C4', 'C5', 'C4'],
              ['C2', 'C1', 'C2', 'C3', 'C3', 'C4', 'C4', 'C5', 'C4', 'C3', 'C6'],
@@ -276,7 +280,7 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
               'C4', 'C4', 'C4', 'C4', 'C3', 'C5', 'C4', 'C4', 'C4', 'C4', 'C4', 'C5', 'C4', 'C7', 'C6', 'C7'],
              ['C2', 'C3', 'C6'],
              ['C3', 'C5', 'C4', 'C4', 'C4', 'C4', 'C4',
-                 'C3', 'C4', 'C6', 'C6', 'C4', 'C7'],
+              'C3', 'C4', 'C6', 'C6', 'C4', 'C7'],
              ['C2', 'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C4', 'C7'],
              ['C3', 'C1', 'C1', 'C1', 'C2', 'C4', 'C4', 'C4',
               'C3', 'C4', 'C4', 'C6', 'C6', 'C6', 'C4', 'C7'],
@@ -285,7 +289,7 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C1', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C5', 'C4', 'C4', 'C5', 'C4', 'C4',
               'C3', 'C4', 'C3', 'C4', 'C3', 'C4', 'C3', 'C4', 'C3', 'C4', 'C7', 'C7', 'C7'],
              ['C1', 'C4', 'C4', 'C5', 'C4', 'C4', 'C4',
-                 'C4', 'C4', 'C5', 'C6', 'C6', 'C6'],
+              'C4', 'C4', 'C5', 'C6', 'C6', 'C6'],
              ['C2', 'C4', 'C4', 'C4', 'C6', 'C7'],
              ['C3', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4', 'C4', 'C4',
               'C4', 'C3', 'C4', 'C4', 'C4', 'C4', 'C7', 'C7', 'C6'],
@@ -294,23 +298,23 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C1', 'C4', 'C4', 'C4', 'C7', 'C6'],
              ['C3', 'C1', 'C3', 'C3', 'C4', 'C4', 'C4', 'C6'],
              ['C3', 'C1', 'C4', 'C3', 'C4', 'C4',
-                 'C4', 'C4', 'C4', 'C3', 'C4', 'C6'],
+              'C4', 'C4', 'C4', 'C3', 'C4', 'C6'],
              ['C3', 'C1', 'C1', 'C1', 'C1', 'C3', 'C7', 'C6'],
              ['C1', 'C4', 'C6', 'C6'],
              ['C3', 'C4', 'C3', 'C4', 'C4', 'C4', 'C3', 'C3', 'C3', 'C6'],
              ['C1', 'C3', 'C5', 'C5', 'C4', 'C3', 'C4', 'C4', 'C4', 'C7'],
              ['C3', 'C3', 'C7', 'C7'],
              ['C1', 'C3', 'C3', 'C4', 'C3', 'C5',
-                 'C5', 'C3', 'C4', 'C3', 'C4', 'C6'],
+              'C5', 'C3', 'C4', 'C3', 'C4', 'C6'],
              ['C1', 'C3', 'C6', 'C6'],
              ['C1', 'C4', 'C5', 'C4', 'C4', 'C6', 'C6'],
              ['C2', 'C1', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C3', 'C4'],
              ['C3', 'C5', 'C4', 'C3', 'C3', 'C4', 'C4',
-                 'C4', 'C3', 'C4', 'C5', 'C4', 'C7'],
+              'C4', 'C3', 'C4', 'C5', 'C4', 'C7'],
              ['C3', 'C4', 'C4', 'C4', 'C5', 'C4', 'C4', 'C4', 'C4', 'C4',
               'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C4', 'C7', 'C7'],
              ['C2', 'C1', 'C3', 'C3', 'C4', 'C3', 'C4',
-                 'C3', 'C4', 'C4', 'C4', 'C4', 'C6'],
+              'C3', 'C4', 'C4', 'C4', 'C4', 'C6'],
              ['C2', 'C1', 'C4', 'C5', 'C4', 'C4', 'C7', 'C4', 'C6', 'C6'],
              ['C1', 'C1', 'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3', 'C7'],
              ['C3', 'C1', 'C4', 'C5', 'C4', 'C6'],
@@ -320,8 +324,10 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C1', 'C2', 'C3', 'C5', 'C4', 'C4', 'C4', 'C4', 'C4', 'C3',
               'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C7', 'C6'],
              ['C3', 'C3', 'C4', 'C4', 'C6'],
-             ['C1', 'C4', 'C4', 'C4', 'C5', 'C3', 'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4',
-              'C3', 'C4', 'C4', 'C4', 'C4', 'C5', 'C3', 'C4', 'C4', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4', 'C3', 'C4', 'C4', 'C4', 'C4', 'C6'],
+             ['C1', 'C4', 'C4', 'C4', 'C5', 'C3', 'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4',
+              'C4', 'C3', 'C4', 'C3', 'C4',
+              'C3', 'C4', 'C4', 'C4', 'C4', 'C5', 'C3', 'C4', 'C4', 'C4', 'C4', 'C3', 'C4', 'C3', 'C4', 'C3', 'C4',
+              'C4', 'C4', 'C4', 'C6'],
              ['C1', 'C3', 'C4', 'C4', 'C6', 'C6', 'C7'],
              ['C2', 'C3', 'C4', 'C4', 'C4', 'C4', 'C7'],
              ['C1', 'C3', 'C4', 'C4', 'C6', 'C6'],
@@ -340,7 +346,7 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C1', 'C4', 'C3', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4',
               'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C6', 'C6'],
              ['C3', 'C3', 'C4', 'C4', 'C4', 'C4',
-                 'C5', 'C4', 'C4', 'C4', 'C5', 'C7'],
+              'C5', 'C4', 'C4', 'C4', 'C5', 'C7'],
              ['C3', 'C4', 'C4'],
              ['C1', 'C4', 'C4', 'C7'],
              ['C1', 'C3', 'C4', 'C5', 'C3', 'C4', 'C7', 'C6'],
@@ -356,12 +362,22 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C2', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4',
               'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C7'],
              ['C1', 'C3', 'C2', 'C4', 'C4', 'C6', 'C7', 'C7']]
-h = HMM(A1, B1, states, observations)
+# h = HMM(A1, B1, states, observations)
 # h = HMM(A, B, states, observations)
 # print(h.gen_sequence(3))
-print(h.viterbi(seq))
+# print(h.viterbi(seq))
 # print(h.forward(seq))
-# h1 = HMM(A_ini, B_ini, states, observations)
-# h2 = h1.baum_welch(seq_train)
-# print('A', h2.A)
-# print('B', h2.B)
+h1 = HMM(A_ini, B_ini, states, observations)
+# start = dt.datetime.now()
+h2 = h1.baum_welch(seq_train)
+# end = dt.datetime.now() - start
+print('A', h2.A)
+print('B', h2.B)
+print(h2.A.sum(1))
+print(h2.B.sum(1))
+# print(end)
+# t = timeit.Timer(lambda: HMM(A_ini, B_ini, states, observations).baum_welch(seq_train))
+# print(t.timeit(number=100))
+# 21.494664558002114
+# 20.186403355000948
+# 20.40747640599875
