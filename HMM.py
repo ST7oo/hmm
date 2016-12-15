@@ -21,6 +21,12 @@ class HMM:
         lp[X == 0] = float('-inf')
         return lp
 
+    def index_observations(self, obs):
+        y = []
+        for o in obs:
+            y.append(self.name_observations.index(o))
+        return y
+
     def gen_sequence(self, num_sequences=1):
         def draw_from(probabilities):
             return np.random.choice(len(probabilities), 1, p=probabilities)[0]
@@ -54,17 +60,16 @@ class HMM:
 
     def viterbi(self, observations):
         sequences = []
-        for i in np.arange(len(observations)):
-            T = len(observations[i])
+        for obs in observations:
+            T = len(obs)
             delta = np.zeros([self.N, T])
             psi = np.zeros([self.N, T])
-            index_obs = self.name_observations.index(observations[i][0])
-            delta[:, 0] = self.Alog[0, :] + self.Blog[:, index_obs]
+            index_obs = self.index_observations(obs)
+            delta[:, 0] = self.Alog[0, :] + self.Blog[:, index_obs[0]]
             psi[:, 0] = 0
             for t in np.arange(1, T):
                 tmp = np.array([delta[:, t - 1]]).T + self.Alog
-                index_obs = self.name_observations.index(observations[i][t])
-                delta[:, t] = np.amax(tmp, axis=0) + self.Blog[:, index_obs]
+                delta[:, t] = np.amax(tmp, axis=0) + self.Blog[:, index_obs[t]]
                 psi[:, t] = np.argmax(tmp, axis=0)
             max_prob = np.exp(np.max(delta[:, T - 1]))
             sequence = np.array([np.argmax(delta[:, T - 1])], dtype='int')
@@ -79,14 +84,13 @@ class HMM:
         T = len(observations)
         c = np.zeros([T])
         alpha = np.zeros([self.N, T])
-        index_obs = self.name_observations.index(observations[0])
-        alpha[:, 0] = self.A[0, :] * self.B[:, index_obs]
+        index_obs = self.index_observations(observations)
+        alpha[:, 0] = self.A[0, :] * self.B[:, index_obs[0]]
         c[0] = 1.0 / np.sum(alpha[:, 0])
         alpha[:, 0] *= c[0]
         for t in np.arange(1, T):
-            index_obs = self.name_observations.index(observations[t])
             alpha[:, t] = np.dot(
-                alpha[:, t - 1], self.A) * self.B[:, index_obs]
+                alpha[:, t - 1], self.A) * self.B[:, index_obs[t]]
             c[t] = 1.0 / np.sum(alpha[:, t])
             alpha[:, t] *= c[t]
         log_prob_obs = -(np.sum(np.log(c)))
@@ -98,26 +102,16 @@ class HMM:
         # sequences = []
         # for i in np.arange(len(observations)):
         T = len(observations)
+        index_obs = self.index_observations(observations)
         beta = np.zeros([self.N, T])
         beta[:, T - 1] = c[T - 1]
         for t in np.arange(T - 1, 0, -1):
-            index_obs = self.name_observations.index(observations[t])
             beta[:, t - 1] = np.dot(self.A,
-                                    self.B[:, index_obs] * beta[:, t])
+                                    self.B[:, index_obs[t]] * beta[:, t])
             beta[:, t - 1] *= c[t - 1]
         return beta
         #     sequences.append(beta)
         # return sequences
-
-    def bw(self, observations, max_iter=20):
-        log_likelihoods = []
-        for epoch in np.arange(max_iter):
-            for obs in observations:
-                alpha, log_prob_obs, c = self.forward(obs)
-                beta = self.backward(obs, c)
-                T = len(obs)
-                for t in np.arange(T - 1):
-                    index_obs = self.name_observations.index(obs[t + 1])
 
     def baum_welch(self, observations, max_iter=20):
         # best_A = self.A.copy()
@@ -139,6 +133,7 @@ class HMM:
                 # print(beta)
                 log_likelihood += log_prob_obs
                 T = len(obs)
+                index_obs = self.index_observations(obs)
                 w_k = 1.0 / -(log_prob_obs + np.log(T))
                 gamma_raw = alpha * beta
                 gamma = gamma_raw / gamma_raw.sum(0)
@@ -147,17 +142,14 @@ class HMM:
                 a_bar_den += w_k * gamma[:, :T - 1].sum(1)
                 xi = np.zeros([self.N, self.N, T - 1])
                 for t in np.arange(T - 1):
-                    index_obs = self.name_observations.index(obs[t + 1])
                     for i in np.arange(self.N):
-                        xi[i, :, t] = alpha[i, t] * self.A[i, :] * \
-                            self.B[:, index_obs] * beta[:, t + 1]
+                        xi[i, :, t] = alpha[i, t] * self.A[i, :] * self.B[:, index_obs[t+1]] * beta[:, t + 1]
                 # si_sj_all += w_k * xi.sum(2)
                 # a_bar_num += w_k * xi[:, :, :T - 1].sum(2)
                 a_bar_num += w_k * xi.sum(2)
                 B_bar = np.zeros([self.N, self.M])
                 for k in np.arange(self.M):
-                    indicator = np.array(
-                        [self.name_observations[k] == x for x in obs])
+                    indicator = np.array([self.name_observations[k] == x for x in obs])
                     B_bar[:, k] = gamma.T[indicator, :].sum(0)
                 b_bar_num += w_k * B_bar
                 # print(alpha)
@@ -364,12 +356,12 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C2', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4',
               'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C7'],
              ['C1', 'C3', 'C2', 'C4', 'C4', 'C6', 'C7', 'C7']]
-# h = HMM(A1, B1, states, observations)
+h = HMM(A1, B1, states, observations)
 # h = HMM(A, B, states, observations)
 # print(h.gen_sequence(3))
-# print(h.viterbi(seq))
+print(h.viterbi(seq))
 # print(h.forward(seq))
-h1 = HMM(A_ini, B_ini, states, observations)
-h2 = h1.baum_welch(seq_train)
-print('A', h2.A)
-print('B', h2.B)
+# h1 = HMM(A_ini, B_ini, states, observations)
+# h2 = h1.baum_welch(seq_train)
+# print('A', h2.A)
+# print('B', h2.B)
