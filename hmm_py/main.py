@@ -178,14 +178,14 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C2', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4',
               'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C7'],
              ['C1', 'C3', 'C2', 'C4', 'C4', 'C6', 'C7', 'C7']]
-h = HMM(A, B, states, observations)
-print(h.gen_sequence(3))
+# h = HMM(A, B, states, observations)
+# print(h.gen_sequence(3))
 # print(h.viterbi(seq))
 # print(h.forward(seq))
-# h1 = HMM(A_ini, B_ini, states, observations)
-# h2 = h1.baum_welch(seq_train)
-# print('A', h2.A)
-# print('B', h2.B)
+h1 = HMM(A_ini, B_ini, states, observations)
+h2 = h1.baum_welch(seq_train)
+print('A', h2.A)
+print('B', h2.B)
 # print(h2.A.sum(1))
 # print(h2.B.sum(1))
 # t = timeit.Timer(lambda: HMM(A_ini, B_ini, states, observations).baum_welch(seq_train))
