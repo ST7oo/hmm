@@ -35,15 +35,17 @@ module.exports = {
     { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/assets/icon/favicon-16x16.png' },
 
     /** <link> tags for a Web App Manifest **/
-    { rel: 'manifest', href: '/assets/manifest.json' }
+    { rel: 'manifest', href: '/assets/manifest.json' },
+
+    /** <link> tags for a fonts **/
+    { rel: 'stylesheet', href: 'https://fonts.googleapis.com/icon?family=Material+Icons' },
+
+    /** <link> tags for css **/
+    { rel: 'stylesheet', href: 'https://code.getmdl.io/1.3.0/material.deep_purple-deep_orange.min.css' }
   ],
   meta: [
     { name: 'msapplication-TileColor', content: '#00bcd4' },
     { name: 'msapplication-TileImage', content: '/assets/icon/ms-icon-144x144.png', '=content': true },
     { name: 'theme-color', content: '#00bcd4' },
-
-    /** <link> tags for a fonts **/
-    { rel: 'stylesheet', href: 'https://fonts.googleapis.com/icon?family=Material+Icons' },
-    { rel: 'stylesheet', href: 'http://fonts.googleapis.com/css?family=Roboto:300,400,500,700' }
   ]
 };

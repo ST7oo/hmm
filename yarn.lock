@@ -22,11 +22,9 @@
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@angular/http/-/http-2.2.1.tgz#1626884a6c5f0cc602ce9d81e7420fcc02db3353"
 
-"@angular/material@^2.0.0-beta.0":
-  version "2.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@angular/material/-/material-2.0.0-beta.0.tgz#74f6dc34ed9703766d5f98f95f5921959adf7c12"
-  dependencies:
-    "@types/hammerjs" "^2.0.30"
+"@angular/material@^2.0.0-beta.1":
+  version "2.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@angular/material/-/material-2.0.0-beta.1.tgz#106a0b79fb2b48a7606a0682c4e5d0bbe03364a0"
 
 "@angular/platform-browser-dynamic@2.2.1":
   version "2.2.1"
@@ -68,7 +66,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/hammerjs@^2.0.30", "@types/hammerjs@^2.0.33":
+"@types/hammerjs@^2.0.33":
   version "2.0.33"
   resolved "https://registry.yarnpkg.com/@types/hammerjs/-/hammerjs-2.0.33.tgz#45f57352474181425bb4b65f7313a60426d54bab"
 
@@ -2778,10 +2776,6 @@ map-obj@^1.0.0, map-obj@^1.0.1:
 marked@^0.3.5:
   version "0.3.6"
   resolved "https://registry.yarnpkg.com/marked/-/marked-0.3.6.tgz#b2c6c618fccece4ef86c4fc6cb8a7cbf5aeda8d7"
-
-material@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/material/-/material-0.1.1.tgz#ac3e3c9519cee0fe54699df833e5eb5d58e7f4f5"
 
 math-expression-evaluator@^1.2.14:
   version "1.2.14"

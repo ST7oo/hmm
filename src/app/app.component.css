@@ -1,5 +1,32 @@
 @import '~@angular/material/core/theming/prebuilt/deeppurple-amber.css';
 
-html,body{
-  font-family:"Helvetica","Arial",sans-serif;font-size:14px;font-weight:400;line-height:20px
+.pointer {
+  cursor: pointer;
+}
+
+.card {
+  float: left;
+  margin: 10px;
+  width: auto;
+}
+
+.card_list {
+  padding: 0;
+}
+
+.card_item {
+  padding: 0 15px;
+  min-height: 0;
+}
+
+.card_title_small {
+  margin: 0;
+}
+
+.matrix_field {
+  width: 50px;
+}
+
+.matrix_cell {
+  padding: 0 15px !important;
 }
