@@ -58,4 +58,17 @@ export class HomeComponent {
   viterbi() {
 
   }
+
+  initialize_A(random: boolean) {
+    this.hmm.initialize_matrix(true, false, random);
+  }
+
+  initialize_B(random: boolean) {
+    this.hmm.initialize_matrix(false, true, random);
+  }
+
+  train() {
+    console.log(this.hmm.A_ini);
+    console.log(this.hmm.B_ini);
+  }
 }

@@ -8,6 +8,7 @@
   float: left;
   margin: 10px;
   width: auto;
+  height: 100%;
 }
 
 .card_list {
@@ -23,10 +24,20 @@
   margin: 0;
 }
 
+.card_overflow {
+  overflow-x: auto;
+}
+
 .matrix_field {
   width: 50px;
 }
 
 .matrix_cell {
   padding: 0 15px !important;
+  min-width: 70px;
+}
+
+.button_alone {
+  clear: both;
+  padding: 30px 10px;
 }
