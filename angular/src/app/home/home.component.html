@@ -185,15 +185,15 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let s of seq">
+              <tr *ngFor="let s of seq; let j = index">
                 <td class="mdl-data-table__cell--non-numeric">{{s}}</td>
-                <td class="mdl-data-table__cell--non-numeric">...</td>
+                <td class="mdl-data-table__cell--non-numeric">{{paths[i][j]}}</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="mdl-card__actions mdl-card--border">
-          <label>Probability: </label><span>...</span>
+          <label>Probability: </label><span>{{probabilities[i] | number: '1.1-6'}}</span>
         </div>
       </div>
     </md-tab>

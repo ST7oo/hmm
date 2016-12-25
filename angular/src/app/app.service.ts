@@ -106,14 +106,34 @@ export class HMMService {
     return this.http.get('http://localhost:5000/gen/' + JSON.stringify(data)).map(this.extract_data).catch(this.handleError);
   }
 
-  private prepare_model() {
+  viterbi(seq: string[][]) {
+    let data = this.prepare_model();
+    data['seq'] = seq;
+    return this.http.get('http://localhost:5000/viterbi/' + JSON.stringify(data)).map(this.extract_data).catch(this.handleError);
+  }
+
+  train(seq: string[][]) {
+    let data = this.prepare_model(true);
+    data['seq'] = seq;
+    return this.http.get('http://localhost:5000/train/' + JSON.stringify(data)).map(this.extract_data).catch(this.handleError);
+  }
+
+  private prepare_model(ini?: boolean) {
     let A = [];
     let B = [];
     let N = this.states.length;
     let M = this.observations.length;
-    for (let i = 0; i < N; i++) {
-      A.push(this.A[i].slice(0, N))
-      B.push(this.B[i].slice(0, M));
+    if (!ini) {
+      for (let i = 0; i < N; i++) {
+        A.push(this.A[i].slice(0, N))
+        B.push(this.B[i].slice(0, M));
+      }
+    }
+    else {
+      for (let i = 0; i < N; i++) {
+        A.push(this.A_ini[i].slice(0, N))
+        B.push(this.B_ini[i].slice(0, M));
+      }
     }
     let model = {
       A: A,

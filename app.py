@@ -21,6 +21,26 @@ def gen(params):
     resp = h.gen_sequence(d['num'])
     return jsonify(data=resp)
 
+
+@app.route('/viterbi/<params>')
+def viterbi(params):
+    d = json.loads(params)
+    h = HMM(d['A'], d['B'], d['states'], d['observations'])
+    resp = h.viterbi(d['seq'])
+    return jsonify(data=resp)
+
+
+@app.route('/train/<params>')
+def train(params):
+    d = json.loads(params)
+    h = HMM(d['A'], d['B'], d['states'], d['observations'])
+    h_trained = h.baum_welch(d['seq'])
+    resp = {
+        'A': h_trained.A.tolist(),
+        'B': h_trained.B.tolist()
+    }
+    return jsonify(data=resp)
+
 # @app.errorhandler(404)
 # def page_not_found(error):
 #     return render_template('page_not_found.html'), 404
