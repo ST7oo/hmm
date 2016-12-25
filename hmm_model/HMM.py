@@ -6,9 +6,10 @@ class HMM:
     """
     Hidden Markov Model Class
     """
+
     def __init__(self, A=None, B=None, name_states=None, name_observations=None):
-        self.A = A
-        self.B = B
+        self.A = np.array(A)
+        self.B = np.array(B)
         self.name_states = name_states
         self.name_observations = name_observations
         self.N = len(name_states)
@@ -124,13 +125,15 @@ class HMM:
         c[0] = 1.0 / np.sum(alpha[:, 0])
         alpha[:, 0] *= c[0]
         for t in np.arange(1, T):
-            alpha[:, t] = np.dot(alpha[:, t - 1], self.A) * self.B[:, index_obs[t]]
+            alpha[:, t] = np.dot(alpha[:, t - 1], self.A) * \
+                self.B[:, index_obs[t]]
             c[t] = 1.0 / np.sum(alpha[:, t])
             alpha[:, t] *= c[t]
         log_prob_obs = -(np.sum(np.log(c)))
         beta[:, T - 1] = c[T - 1]
         for t in np.arange(T - 1, 0, -1):
-            beta[:, t - 1] = np.dot(self.A, self.B[:, index_obs[t]] * beta[:, t])
+            beta[:, t - 1] = np.dot(self.A,
+                                    self.B[:, index_obs[t]] * beta[:, t])
             beta[:, t - 1] *= c[t - 1]
         return alpha, beta, log_prob_obs
 
@@ -164,13 +167,15 @@ class HMM:
                 xi = np.zeros([self.N, self.N, T - 1])
                 for t in np.arange(T - 1):
                     for i in np.arange(self.N):
-                        xi[i, :, t] = alpha[i, t] * self.A[i, :] * self.B[:, index_obs[t + 1]] * beta[:, t + 1]
+                        xi[i, :, t] = alpha[i, t] * self.A[i, :] * \
+                            self.B[:, index_obs[t + 1]] * beta[:, t + 1]
                 # a_bar_num += w * xi[:, :, :T - 1].sum(2)
                 # a_bar_num += w * xi.sum(2)
                 a_bar_num += xi.sum(2)
                 B_bar = np.zeros([self.N, self.M])
                 for k in np.arange(self.M):
-                    indicator = np.array([self.name_observations[k] == x for x in obs])
+                    indicator = np.array(
+                        [self.name_observations[k] == x for x in obs])
                     B_bar[:, k] = gamma.T[indicator, :].sum(0)
                 # b_bar_num += w * B_bar
                 b_bar_num += B_bar
@@ -179,7 +184,8 @@ class HMM:
             A_bar[0, :] = pi_bar / np.sum(pi_bar)
             for i in np.arange(1, self.N - 1):
                 A_bar[i, :] = a_bar_num[i, :] / a_bar_den[i]
-            # A_bar[self.N-2, self.N-1] = 1 - A_bar[self.N-2].sum() # correct final silent state
+            # A_bar[self.N-2, self.N-1] = 1 - A_bar[self.N-2].sum() # correct
+            # final silent state
             self.A = A_bar
             # update B
             for i in np.arange(1, self.N - 1):
@@ -193,5 +199,6 @@ class HMM:
             if epoch > 1 and log_likelihood >= log_likelihoods[epoch - 1]:
                 print('not improving')
                 break
-        self.A[self.N - 2, self.N - 1] = 1 - self.A[self.N - 2].sum()  # correct final silent state
+        self.A[self.N - 2, self.N - 1] = 1 - \
+            self.A[self.N - 2].sum()  # correct final silent state
         return self

@@ -122,9 +122,9 @@
     <md-tab label="Generate">
       <h2>Generate sequence</h2>
       <md-input-container>
-        <input md-input placeholder="Number of sequences" type="number" [(ngModel)]="number_sequences">
+        <input md-input placeholder="Number of sequences" type="number" min="0" [(ngModel)]="number_sequences">
       </md-input-container>
-      <button md-raised-button color="primary">Generate</button>
+      <button md-raised-button color="primary" (click)="generate_sequence()">Generate</button>
       <pre *ngFor="let seq of generated_sequences">{{seq}}</pre>
     </md-tab>
 

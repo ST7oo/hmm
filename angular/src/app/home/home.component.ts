@@ -8,7 +8,7 @@ import { HMMService } from '../app.service';
   templateUrl: './home.component.html'
 })
 export class HomeComponent {
-  generated_sequences = [['C1', 'C2'], ['C3', 'C5']];
+  generated_sequences = [[]];
   number_sequences = 1;
   sequence = ['C1', 'C2'];
   sequences = [['C1', 'C2', 'C3', 'C4', 'C4', 'C6', 'C7'],
@@ -53,6 +53,11 @@ export class HomeComponent {
 
   remove_sequence(i) {
     this.sequences.splice(i, 1);
+  }
+
+  generate_sequence() {
+    let gs = this.hmm.generate_sequence(this.number_sequences);
+    gs.subscribe(r => this.generated_sequences = r);
   }
 
   viterbi() {

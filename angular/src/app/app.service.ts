@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { Http, Response } from '@angular/http';
+import { Observable } from 'rxjs/Observable';
 
 @Injectable()
 export class HMMService {
@@ -9,7 +11,7 @@ export class HMMService {
   A_ini: number[][];
   B_ini: number[][];
 
-  constructor() {
+  constructor(private http: Http) {
     this.mock_data();
   }
 
@@ -96,6 +98,49 @@ export class HMMService {
 
   delete_observation(i: number) {
     this.observations.splice(i.valueOf(), 1);
+  }
+
+  generate_sequence(num: number) {
+    let data = this.prepare_model();
+    data['num'] = num;
+    return this.http.get('http://localhost:5000/gen/' + JSON.stringify(data)).map(this.extract_data).catch(this.handleError);
+  }
+
+  private prepare_model() {
+    let A = [];
+    let B = [];
+    let N = this.states.length;
+    let M = this.observations.length;
+    for (let i = 0; i < N; i++) {
+      A.push(this.A[i].slice(0, N))
+      B.push(this.B[i].slice(0, M));
+    }
+    let model = {
+      A: A,
+      B: B,
+      states: this.states,
+      observations: this.observations
+    };
+    return model;
+  }
+
+  private extract_data(res: Response) {
+    let body = res.json();
+    return body.data || {};
+  }
+
+  private handleError(error: Response | any) {
+    // In a real world app, we might use a remote logging infrastructure
+    let errMsg: string;
+    if (error instanceof Response) {
+      const body = error.json() || '';
+      const err = body.error || JSON.stringify(body);
+      errMsg = `${error.status} - ${error.statusText || ''} ${err}`;
+    } else {
+      errMsg = error.message ? error.message : error.toString();
+    }
+    console.error(errMsg);
+    return Observable.throw(errMsg);
   }
 
 }
