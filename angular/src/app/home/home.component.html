@@ -4,6 +4,7 @@
     <!--MODEL-->
     <md-tab label="Model">
       <h2>Model</h2>
+      <button md-raised-button color="primary" (click)="import()">Import</button>
       <div class="mdl-grid">
         <!--States-->
         <div class="card mdl-card mdl-shadow--2dp">
@@ -29,7 +30,7 @@
                 </div>
               </div>
               <div class="mdl-cell mdl-cell--3-col">
-                <button (click)="add_state(nstate)" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored"><i class="material-icons">add</i></button>
+                <button (click)="add_state(nstate)" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect"><i class="material-icons">add</i></button>
               </div>
             </div>
           </div>
@@ -56,7 +57,7 @@
                 </div>
               </div>
               <div class="mdl-cell mdl-cell--3-col">
-                <button (click)="add_observation(nobservation)" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored"><i class="material-icons">add</i></button>
+                <button (click)="add_observation(nobservation)" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect"><i class="material-icons">add</i></button>
               </div>
             </div>
           </div>
@@ -124,7 +125,7 @@
       <md-input-container>
         <input md-input placeholder="Number of sequences" type="number" min="0" [(ngModel)]="number_sequences">
       </md-input-container>
-      <button md-raised-button color="primary" (click)="generate_sequence()">Generate</button>
+      <button md-raised-button color="accent" (click)="generate_sequence()">Generate</button>
       <label class="error">{{error_generate}}</label>
       <pre *ngFor="let seq of generated_sequences">{{seq}}</pre>
     </md-tab>
@@ -165,8 +166,9 @@
           </div>
         </div>
       </div>
+      <!--Buttons-->
       <div class="button_alone">
-        <button md-raised-button color="primary" (click)="viterbi()">CALCULATE</button>
+        <button md-raised-button color="accent" (click)="viterbi()">CALCULATE</button>
         <label class="error">{{error_viterbi}}</label>
       </div>
       <!--Sequences-->
@@ -290,10 +292,95 @@
             <button md-button color="primary" (click)="initialize_B(true)">Random</button>
           </div>
         </div>
+        <!--Sequences-->
+        <div class="card mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title mdl-card--expand">
+            <h2 class="mdl-card__title-text">Sequences to train</h2>
+          </div>
+          <div class="card_overflow card_fixed_h mdl-card__supporting-text">
+            <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+              <tbody>
+                <tr *ngFor="let seq of hmm.train_seq; let i = index">
+                  <td><b>{{i+1}}</b></td>
+                  <td class="mdl-data-table__cell--non-numeric">{{seq}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mdl-card__actions mdl-card--border">
+            <button md-button color="primary" (click)="import()">Import</button>
+          </div>
+        </div>
       </div>
+      <!--Buttons-->
       <div class="button_alone">
-        <button md-raised-button color="primary" (click)="train()">CALCULATE</button>
+        <md-input-container>
+          <input md-input placeholder="Max iterations" type="number" min="1" [(ngModel)]="max_iter">
+        </md-input-container>
+        <button md-raised-button color="accent" (click)="train()" [disabled]="calculating_train">CALCULATE</button>
         <label class="error">{{error_train}}</label>
+        <span *ngIf="calculating_train">Training...</span>
+      </div>
+      <!--Trained-->
+      <div *ngIf="trained">
+        <label>Trained in {{iters}} iterations</label>
+        <br>
+        <!--A trained-->
+        <div class="card mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title mdl-card--expand">
+            <h2 class="mdl-card__title-text">Final Transitions</h2>
+          </div>
+          <div class="card_overflow mdl-card__supporting-text">
+            <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+              <thead>
+                <tr>
+                  <th>(From \ To)</th>
+                  <th class="mdl-data-table__cell--non-numeric" *ngFor="let state of hmm.states">{{state}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let state of hmm.states; let i = index">
+                  <td class="mdl-data-table__cell--non-numeric"><b>{{state}}</b></td>
+                  <td *ngFor="let s of hmm.states; let j = index" class="matrix_cell mdl-data-table__cell--non-numeric">
+                    {{A_trained[i][j] | number: '1.1-6'}}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mdl-card__actions mdl-card--border">
+            <button md-button color="primary" (click)="export(true)">Export as .json</button>
+            <button md-button color="primary" (click)="export(false)">Export as .trans</button>
+          </div>
+        </div>
+        <!--B trained-->
+        <div class="card mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title mdl-card--expand">
+            <h2 class="mdl-card__title-text">Final Emissions</h2>
+          </div>
+          <div class="card_overflow mdl-card__supporting-text">
+            <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+              <thead>
+                <tr>
+                  <th>&nbsp;</th>
+                  <th class="mdl-data-table__cell--non-numeric" *ngFor="let observation of hmm.observations">{{observation}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let state of hmm.states; let i = index">
+                  <td class="mdl-data-table__cell--non-numeric"><b>{{state}}</b></td>
+                  <td class="matrix_cell mdl-data-table__cell--non-numeric" *ngFor="let o of hmm.observations; let j = index">
+                    {{B_trained[i][j] | number: '1.1-6'}}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mdl-card__actions mdl-card--border">
+            <button md-button color="primary" (click)="export(true)">Export as .json</button>
+            <button md-button color="primary" (click)="export(false)">Export as .emit</button>
+          </div>
+        </div>
       </div>
     </md-tab>
   </md-tab-group>

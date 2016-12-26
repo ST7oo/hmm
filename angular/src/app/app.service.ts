@@ -26,9 +26,11 @@ export class HMMService {
       this.observations = data.observations;
       this.A = data.A;
       this.B = data.B;
+      this.A_ini = data.A_ini;
+      this.B_ini = data.B_ini;
       this.sequences = data.sequences;
       this.train_seq = data.train_seq;
-      this.initialize_matrix(true, true);
+      // this.initialize_matrix(true, true);
       this.path = [];
       this.path_probabilities = [];
       for (let s of this.sequences) {
@@ -77,6 +79,22 @@ export class HMMService {
 
   get_observation(i: number) {
     return this.observations[i.valueOf()];
+  }
+
+  set_states(states: string[]) {
+    this.states = states;
+  }
+
+  set_observations(observations: string[]) {
+    this.observations = observations;
+  }
+
+  set_A(A: number[][]) {
+    this.A = A;
+  }
+
+  set_B(B: number[][]) {
+    this.B = B;
   }
 
   insert_state(state: string) {
@@ -144,9 +162,10 @@ export class HMMService {
     }).catch(this.handleError);
   }
 
-  train() {
+  train(max_iter: number) {
     let data = this.prepare_model(true);
     data['seq'] = this.train_seq;
+    data['max_iter'] = max_iter;
     return this.http.get('http://localhost:5000/train/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
   }
 

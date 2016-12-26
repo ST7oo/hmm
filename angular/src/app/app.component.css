@@ -28,6 +28,11 @@
   overflow-x: auto;
 }
 
+.card_fixed_h {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .matrix_field {
   width: 50px;
 }
@@ -44,4 +49,31 @@
 
 .error {
   color: red;
+}
+
+.file {
+  display: none;
+}
+
+.dialog {
+  min-width: 600px;
+}
+
+.dialog h5 {
+  float: left;
+}
+
+.import_add {
+  margin-top: 12px;
+  margin-left: 10px;
+}
+
+.container_textarea {
+  width: 80%;
+  padding-left: 20px;
+}
+
+.col-6 {
+  float: left;
+  width: 50%;
 }

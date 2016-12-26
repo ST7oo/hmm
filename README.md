@@ -1,3 +1,3 @@
-# Hidden Markov Model
+# Hidden Markov Model Interactive
 
 Implemented in python

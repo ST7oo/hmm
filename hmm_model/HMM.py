@@ -138,6 +138,12 @@ class HMM:
         return alpha, beta, log_prob_obs
 
     def baum_welch(self, observations, max_iter=20):
+        """
+        Baum-Welch
+        :param observations: array of sequences of observations
+        :param max_iter: number of max iterations
+        :return: HMM instance trained
+        """
         log_likelihoods = []
         for epoch in np.arange(max_iter):
             log_likelihood = 0
@@ -201,4 +207,4 @@ class HMM:
                 break
         self.A[self.N - 2, self.N - 1] = 1 - \
             self.A[self.N - 2].sum()  # correct final silent state
-        return self
+        return self, epoch + 1

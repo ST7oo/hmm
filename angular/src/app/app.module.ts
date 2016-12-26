@@ -20,6 +20,7 @@ import { HMMService } from './app.service';
 import { HomeComponent } from './home';
 import { AboutComponent } from './about';
 import { NoContentComponent } from './no-content';
+import { ImportDialog } from './import-dialog';
 
 // Application wide providers
 const APP_PROVIDERS = [
@@ -42,7 +43,11 @@ const APP_PROVIDERS = [
     AppComponent,
     AboutComponent,
     HomeComponent,
-    NoContentComponent
+    NoContentComponent,
+    ImportDialog
+  ],
+  entryComponents: [
+    ImportDialog
   ],
   imports: [ // import Angular's modules
     BrowserModule,

@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
+import { MdDialog, MdDialogRef } from '@angular/material';
 
 import { HMMService } from '../app.service';
+import { ImportDialog } from '../import-dialog';
 
 @Component({
   selector: 'home',
@@ -8,17 +10,39 @@ import { HMMService } from '../app.service';
   templateUrl: './home.component.html'
 })
 export class HomeComponent {
+  iters: number;
   error_generate: string;
   error_viterbi: string;
   error_train: string;
+  A_trained: string[][];
+  B_trained: string[][];
   generated_sequences = [[]];
   number_sequences = 1;
+  max_iter = 10;
   sequence = ['C1', 'C2'];
+  calculating_train = false;
+  trained = false;
+  dialogRef: MdDialogRef<ImportDialog>;
 
-  constructor(public hmm: HMMService) { }
+  constructor(public hmm: HMMService, public dialog: MdDialog) { }
 
   ngOnInit() {
     console.log('Home component');
+  }
+
+  import() {
+    this.dialogRef = this.dialog.open(ImportDialog, {
+      disableClose: false
+    });
+    this.dialogRef.afterClosed().subscribe(res => {
+      this.dialogRef = null;
+      if (res) {
+        this.hmm.set_states(res.states);
+        this.hmm.set_observations(res.observations);
+        this.hmm.set_A(res.A);
+        this.hmm.set_B(res.B);
+      }
+    })
   }
 
   add_state(input: HTMLInputElement) {
@@ -97,15 +121,22 @@ export class HomeComponent {
   }
 
   train() {
-    let bw = this.hmm.train();
+    this.calculating_train = true;
+    let bw = this.hmm.train(this.max_iter);
     bw.subscribe(r => {
       if (r.data) {
-        console.log(r.data);
+        this.A_trained = r.data.A;
+        this.B_trained = r.data.B;
+        this.iters = r.data.iters;
+        this.trained = true;
       } else if (r.error) {
         this.error_train = r.error;
+        this.trained = false;
       } else {
         this.error_train = 'Unexpected error ocurred.';
+        this.trained = false;
       }
+      this.calculating_train = false;
     });
   }
 }

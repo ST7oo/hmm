@@ -1,0 +1,32 @@
+<div class="dialog">
+  <h1 md-dialog-title>Import</h1>
+  <md-dialog-content>
+    <label>Select a file with the correct format. See the examples: <a class="pointer" (click)="example('.trans')">.trans</a>, <a class="pointer" (click)="example('.emit')">.emit</a> (soon: .json, .txt)</label>
+    <div class="col-6">
+      <h5>Transitions</h5>
+      <input class="file" type="file" id="file1" (change)="file_change($event, 'transitions')" accept=".json, .txt, .trans">
+      <label for="file1" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
+        <i class="material-icons">add</i>
+      </label>
+      <md-input-container class="container_textarea">
+        <textarea md-input rows="10" [(ngModel)]="text_transitions" readonly></textarea>
+      </md-input-container>
+    </div>
+    <div class="col-6">
+      <h5>Emissions</h5>
+      <input class="file" type="file" id="file2" (change)="file_change($event, 'emissions')" accept=".json, .txt, .emit">
+      <label for="file2" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
+        <i class="material-icons">add</i>
+      </label>
+      <md-input-container class="container_textarea">
+        <textarea md-input rows="10" [(ngModel)]="text_emissions" readonly></textarea>
+      </md-input-container>
+    </div>
+  </md-dialog-content>
+  <md-dialog-actions>
+    <span class="error">{{message}}</span>
+    <br>
+    <button md-button color="primary" (click)="import()">Import</button>
+    <button md-button color="warn" md-dialog-close>Cancel</button>
+  </md-dialog-actions>
+</div>

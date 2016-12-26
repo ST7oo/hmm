@@ -41,13 +41,17 @@ def train(params):
     d = json.loads(params)
     try:
         h = HMM(d['A'], d['B'], d['states'], d['observations'])
-        h_trained = h.baum_welch(d['seq'])
+        max_iter = d['max_iter'] if 'max_iter' in d else 20
+        h_trained, iters = h.baum_welch(d['seq'], max_iter)
         trained = {
             'A': h_trained.A.tolist(),
-            'B': h_trained.B.tolist()
+            'B': h_trained.B.tolist(),
+            'iters': str(iters)
         }
         resp = jsonify(data=trained)
     except ValueError as e:
+        resp = jsonify(error=str(e))
+    except KeyError as e:
         resp = jsonify(error=str(e))
     return resp
 
