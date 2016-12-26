@@ -41,3 +41,7 @@
   clear: both;
   padding: 30px 10px;
 }
+
+.error {
+  color: red;
+}

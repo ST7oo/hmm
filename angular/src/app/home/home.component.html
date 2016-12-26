@@ -14,7 +14,7 @@
             <ul class="card_list mdl-list">
               <li class="card_item mdl-list__item" *ngFor="let state of hmm.states; let i = index">
                 <span class="mdl-list__item-primary-content">{{state}}</span>
-                <span class="pointer mdl-list__item-secondary-action" (click)="delete_state(i)">
+                <span class="pointer mdl-list__item-secondary-action" (click)="remove_state(i)">
                     <i class="material-icons">delete</i>
                   </span>
               </li>
@@ -24,12 +24,12 @@
             <div class="mdl-grid">
               <div class="mdl-cell mdl-cell--9-col">
                 <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                  <input class="mdl-textfield__input" type="text" id="new_state" #nstate (keyup.enter)="insert_state(nstate)">
+                  <input class="mdl-textfield__input" type="text" id="new_state" #nstate (keyup.enter)="add_state(nstate)">
                   <label class="mdl-textfield__label" for="new_state">New state</label>
                 </div>
               </div>
               <div class="mdl-cell mdl-cell--3-col">
-                <button (click)="insert_state(nstate)" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored"><i class="material-icons">add</i></button>
+                <button (click)="add_state(nstate)" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored"><i class="material-icons">add</i></button>
               </div>
             </div>
           </div>
@@ -43,7 +43,7 @@
             <ul class="card_list mdl-list">
               <li class="card_item mdl-list__item" *ngFor="let observation of hmm.observations; let i = index">
                 <span class="mdl-list__item-primary-content">{{observation}}</span>
-                <span class="pointer mdl-list__item-secondary-action" (click)="delete_observation(i)"><i class="material-icons">delete</i></span>
+                <span class="pointer mdl-list__item-secondary-action" (click)="remove_observation(i)"><i class="material-icons">delete</i></span>
               </li>
             </ul>
           </div>
@@ -51,12 +51,12 @@
             <div class="mdl-grid">
               <div class="mdl-cell mdl-cell--9-col">
                 <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                  <input class="mdl-textfield__input" type="text" id="new_observation" #nobservation (keyup.enter)="insert_observation(nobservation)">
+                  <input class="mdl-textfield__input" type="text" id="new_observation" #nobservation (keyup.enter)="add_observation(nobservation)">
                   <label class="mdl-textfield__label" for="new_observation">New observation</label>
                 </div>
               </div>
               <div class="mdl-cell mdl-cell--3-col">
-                <button (click)="insert_observation(nobservation)" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored"><i class="material-icons">add</i></button>
+                <button (click)="add_observation(nobservation)" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored"><i class="material-icons">add</i></button>
               </div>
             </div>
           </div>
@@ -125,6 +125,7 @@
         <input md-input placeholder="Number of sequences" type="number" min="0" [(ngModel)]="number_sequences">
       </md-input-container>
       <button md-raised-button color="primary" (click)="generate_sequence()">Generate</button>
+      <label class="error">{{error_generate}}</label>
       <pre *ngFor="let seq of generated_sequences">{{seq}}</pre>
     </md-tab>
 
@@ -166,9 +167,10 @@
       </div>
       <div class="button_alone">
         <button md-raised-button color="primary" (click)="viterbi()">CALCULATE</button>
+        <label class="error">{{error_viterbi}}</label>
       </div>
       <!--Sequences-->
-      <div *ngFor="let seq of sequences; let i = index" class="card mdl-card mdl-shadow--2dp">
+      <div *ngFor="let seq of hmm.sequences; let i = index" class="card mdl-card mdl-shadow--2dp">
         <div class="mdl-card__title mdl-card--expand">
           <h6 class="card_title_small">Sequence {{i+1}}</h6>
           <div class="mdl-layout-spacer"></div>
@@ -187,13 +189,13 @@
             <tbody>
               <tr *ngFor="let s of seq; let j = index">
                 <td class="mdl-data-table__cell--non-numeric">{{s}}</td>
-                <td class="mdl-data-table__cell--non-numeric">{{paths[i][j]}}</td>
+                <td class="mdl-data-table__cell--non-numeric">{{hmm.path[i][j]}}</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="mdl-card__actions mdl-card--border">
-          <label>Probability: </label><span>{{probabilities[i] | number: '1.1-6'}}</span>
+          <label>Probability: </label><span>{{hmm.path_probabilities[i] | number: '1.1-6'}}</span>
         </div>
       </div>
     </md-tab>
@@ -291,6 +293,7 @@
       </div>
       <div class="button_alone">
         <button md-raised-button color="primary" (click)="train()">CALCULATE</button>
+        <label class="error">{{error_train}}</label>
       </div>
     </md-tab>
   </md-tab-group>

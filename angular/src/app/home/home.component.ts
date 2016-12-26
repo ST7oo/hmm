@@ -8,13 +8,12 @@ import { HMMService } from '../app.service';
   templateUrl: './home.component.html'
 })
 export class HomeComponent {
+  error_generate: string;
+  error_viterbi: string;
+  error_train: string;
   generated_sequences = [[]];
   number_sequences = 1;
   sequence = ['C1', 'C2'];
-  sequences = [['C1', 'C2', 'C3', 'C4', 'C4', 'C6', 'C7'],
-  ['C2', 'C2', 'C5', 'C4', 'C4', 'C6', 'C6']];
-  paths = [new Array(7).fill('...'), new Array(7).fill('...')];
-  probabilities = [0, 0];
 
   constructor(public hmm: HMMService) { }
 
@@ -22,21 +21,21 @@ export class HomeComponent {
     console.log('Home component');
   }
 
-  insert_state(input: HTMLInputElement) {
+  add_state(input: HTMLInputElement) {
     this.hmm.insert_state(input.value);
     input.value = null;
   }
 
-  insert_observation(input: HTMLInputElement) {
+  add_observation(input: HTMLInputElement) {
     this.hmm.insert_observation(input.value);
     input.value = null;
   }
 
-  delete_state(i) {
+  remove_state(i) {
     this.hmm.delete_state(i);
   }
 
-  delete_observation(i) {
+  remove_observation(i) {
     this.hmm.delete_observation(i);
   }
 
@@ -50,15 +49,13 @@ export class HomeComponent {
 
   add_sequence() {
     if (this.sequence.length > 0) {
-      this.sequences.push(this.sequence);
-      this.paths.push(new Array(this.sequence.length).fill('...'));
+      this.hmm.insert_sequence(this.sequence);
       this.sequence = [];
     }
   }
 
   remove_sequence(i) {
-    this.sequences.splice(i, 1);
-    this.paths.splice(i, 1);
+    this.hmm.delete_sequence(i);
   }
 
   initialize_A(random: boolean) {
@@ -70,28 +67,45 @@ export class HomeComponent {
   }
 
   generate_sequence() {
+    this.error_generate = '';
     let gs = this.hmm.generate_sequence(this.number_sequences);
-    gs.subscribe(r => this.generated_sequences = r);
+    gs.subscribe(r => {
+      if (r.data) {
+        this.generated_sequences = r.data;
+      } else if (r.error) {
+        this.error_generate = r.error;
+      } else {
+        this.error_generate = 'Unexpected error ocurred.';
+      }
+    });
   }
 
   viterbi() {
-    let v = this.hmm.viterbi(this.sequences);
+    this.error_viterbi = '';
+    let v = this.hmm.viterbi();
     let paths = [];
     let probabilities = [];
     v.subscribe(r => {
-      for (let s of r) {
-        paths.push(s[0]);
-        probabilities.push(s[1]);
+      if (!r.data) {
+        if (r.error) {
+          this.error_viterbi = r.error;
+        } else {
+          this.error_viterbi = 'Unexpected error ocurred.';
+        }
       }
-      this.paths = paths;
-      this.probabilities = probabilities;
     });
   }
 
   train() {
-    let bw = this.hmm.train(this.sequences);
+    let bw = this.hmm.train();
     bw.subscribe(r => {
-      console.log(r);
+      if (r.data) {
+        console.log(r.data);
+      } else if (r.error) {
+        this.error_train = r.error;
+      } else {
+        this.error_train = 'Unexpected error ocurred.';
+      }
     });
   }
 }

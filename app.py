@@ -17,29 +17,39 @@ def index():
 @app.route('/gen/<params>')
 def gen(params):
     d = json.loads(params)
-    h = HMM(d['A'], d['B'], d['states'], d['observations'])
-    resp = h.gen_sequence(d['num'])
-    return jsonify(data=resp)
+    try:
+        h = HMM(d['A'], d['B'], d['states'], d['observations'])
+        resp = jsonify(data=h.gen_sequence(d['num']))
+    except ValueError as e:
+        resp = jsonify(error=str(e))
+    return resp
 
 
 @app.route('/viterbi/<params>')
 def viterbi(params):
     d = json.loads(params)
-    h = HMM(d['A'], d['B'], d['states'], d['observations'])
-    resp = h.viterbi(d['seq'])
-    return jsonify(data=resp)
+    try:
+        h = HMM(d['A'], d['B'], d['states'], d['observations'])
+        resp = jsonify(data=h.viterbi(d['seq']))
+    except ValueError as e:
+        resp = jsonify(error=str(e))
+    return resp
 
 
 @app.route('/train/<params>')
 def train(params):
     d = json.loads(params)
-    h = HMM(d['A'], d['B'], d['states'], d['observations'])
-    h_trained = h.baum_welch(d['seq'])
-    resp = {
-        'A': h_trained.A.tolist(),
-        'B': h_trained.B.tolist()
-    }
-    return jsonify(data=resp)
+    try:
+        h = HMM(d['A'], d['B'], d['states'], d['observations'])
+        h_trained = h.baum_welch(d['seq'])
+        trained = {
+            'A': h_trained.A.tolist(),
+            'B': h_trained.B.tolist()
+        }
+        resp = jsonify(data=trained)
+    except ValueError as e:
+        resp = jsonify(error=str(e))
+    return resp
 
 # @app.errorhandler(404)
 # def page_not_found(error):

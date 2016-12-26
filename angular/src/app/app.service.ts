@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Http, Response } from '@angular/http';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs/Rx';
 
 @Injectable()
 export class HMMService {
@@ -10,25 +10,32 @@ export class HMMService {
   B: number[][];
   A_ini: number[][];
   B_ini: number[][];
+  sequences: string[][];
+  path: string[][];
+  path_probabilities: number[];
+  train_seq: string[][];
 
   constructor(private http: Http) {
     this.mock_data();
   }
 
   mock_data() {
-    this.states = ['INIT', 'Onset', 'Mid', 'End', 'FINAL'];
-    this.observations = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7'];
-    this.A = [[0, 1, 0, 0, 0],
-    [0, 0.3, 0.7, 0, 0],
-    [0, 0, 0.9, 0.1, 0],
-    [0, 0, 0, 0.4, 0.6],
-    [0, 0, 0, 0, 0]];
-    this.B = [[0, 0, 0, 0, 0, 0, 0],
-    [0.5, 0.2, 0.3, 0, 0, 0, 0],
-    [0, 0, 0.2, 0.7, 0.1, 0, 0],
-    [0, 0, 0, 0.1, 0, 0.5, 0.4],
-    [0, 0, 0, 0, 0, 0, 0]];
-    this.initialize_matrix(true, true);
+    this.http.get('assets/data/mock_data.json').subscribe(res => {
+      let data = res.json();
+      this.states = data.states;
+      this.observations = data.observations;
+      this.A = data.A;
+      this.B = data.B;
+      this.sequences = data.sequences;
+      this.train_seq = data.train_seq;
+      this.initialize_matrix(true, true);
+      this.path = [];
+      this.path_probabilities = [];
+      for (let s of this.sequences) {
+        this.path.push(new Array(s.length).fill('...'));
+        this.path_probabilities.push(0);
+      }
+    });
   }
 
   initialize_matrix(a: boolean, b: boolean, random?: boolean) {
@@ -100,22 +107,47 @@ export class HMMService {
     this.observations.splice(i.valueOf(), 1);
   }
 
+  insert_sequence(seq: string[]) {
+    this.sequences.push(seq);
+    this.path.push(new Array(seq.length).fill('...'));
+  }
+
+  delete_sequence(i: number) {
+    this.sequences.splice(i, 1);
+    this.path.splice(i, 1);
+  }
+
   generate_sequence(num: number) {
     let data = this.prepare_model();
     data['num'] = num;
-    return this.http.get('http://localhost:5000/gen/' + JSON.stringify(data)).map(this.extract_data).catch(this.handleError);
+    return this.http.get('http://localhost:5000/gen/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
   }
 
-  viterbi(seq: string[][]) {
+  viterbi() {
     let data = this.prepare_model();
-    data['seq'] = seq;
-    return this.http.get('http://localhost:5000/viterbi/' + JSON.stringify(data)).map(this.extract_data).catch(this.handleError);
+    data['seq'] = this.sequences;
+    return this.http.get('http://localhost:5000/viterbi/' + JSON.stringify(data)).map(res => {
+      let r = res.json();
+      if (r.data) {
+        let path = [];
+        let probabilities = [];
+        for (let s of r.data) {
+          path.push(s[0]);
+          probabilities.push(s[1]);
+        }
+        this.path = path;
+        this.path_probabilities = probabilities;
+        return { data: true };
+      } else {
+        return r;
+      }
+    }).catch(this.handleError);
   }
 
-  train(seq: string[][]) {
+  train() {
     let data = this.prepare_model(true);
-    data['seq'] = seq;
-    return this.http.get('http://localhost:5000/train/' + JSON.stringify(data)).map(this.extract_data).catch(this.handleError);
+    data['seq'] = this.train_seq;
+    return this.http.get('http://localhost:5000/train/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
   }
 
   private prepare_model(ini?: boolean) {
@@ -146,7 +178,7 @@ export class HMMService {
 
   private extract_data(res: Response) {
     let body = res.json();
-    return body.data || {};
+    return body.data || body.error || {};
   }
 
   private handleError(error: Response | any) {
