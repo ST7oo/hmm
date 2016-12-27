@@ -1,6 +1,8 @@
 # Hidden Markov Model Interactive
 
-Hidden Markov Model implemented in python with a web interface using Flask/Angular 2
+Hidden Markov Model implemented in python with a web interface using Flask/Angular 2.
+
+> [Live demo](https://hmm-interactive.herokuapp.com/)
 
 ### Development
 
@@ -9,7 +11,7 @@ Hidden Markov Model implemented in python with a web interface using Flask/Angul
  - (Optional) Install Yarn (otherwise replace `yarn` for `npm`)
  - Clone repository
  - Install dependencies
-	 - `pip install requirements.txt`
+	 - `pip install -r requirements.txt`
 	 - `cd angular`
 	 - `yarn install`
  - Change the files:
