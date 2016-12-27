@@ -1,26 +1,86 @@
 <div class="dialog">
   <h1 md-dialog-title>Import</h1>
   <md-dialog-content>
-    <label>Select a file with the correct format. See the examples: <a class="pointer" (click)="example('.trans')">.trans</a>, <a class="pointer" (click)="example('.emit')">.emit</a> (soon: .json, .txt)</label>
-    <div class="col-6">
-      <h5>Transitions</h5>
-      <input class="file" type="file" id="file1" (change)="file_change($event, 'transitions')" accept=".json, .txt, .trans">
-      <label for="file1" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
+    <!--MODEL-->
+    <div *ngIf="param == 'model'">
+      <label>Select a file with the correct format. See the examples: <a class="pointer" (click)="example('.trans')">.trans</a>, <a class="pointer" (click)="example('.emit')">.emit</a></label>
+      <div class="grid">
+        <!--Transitions-->
+        <div class="col-6">
+          <h5>Transitions</h5>
+          <input class="file" type="file" id="file1" (change)="file_change($event, 'transitions')" accept=".trans">
+          <label for="file1" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
         <i class="material-icons">add</i>
       </label>
-      <md-input-container class="container_textarea">
-        <textarea md-input rows="10" [(ngModel)]="text_transitions" readonly></textarea>
-      </md-input-container>
+          <md-input-container class="container_textarea">
+            <textarea md-input rows="10" [(ngModel)]="text_transitions" readonly></textarea>
+          </md-input-container>
+        </div>
+        <!--Emissions-->
+        <div class="col-6">
+          <h5>Emissions</h5>
+          <input class="file" type="file" id="file2" (change)="file_change($event, 'emissions')" accept=".emit">
+          <label for="file2" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
+        <i class="material-icons">add</i>
+      </label>
+          <md-input-container class="container_textarea">
+            <textarea md-input rows="10" [(ngModel)]="text_emissions" readonly></textarea>
+          </md-input-container>
+        </div>
+      </div>
     </div>
-    <div class="col-6">
-      <h5>Emissions</h5>
-      <input class="file" type="file" id="file2" (change)="file_change($event, 'emissions')" accept=".json, .txt, .emit">
-      <label for="file2" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
+    <!--SEQUENCES-->
+    <div *ngIf="param == 'sequences'">
+      <label>Select a file with the correct format. See the examples: <a class="pointer" (click)="example('.input')">.input</a></label>
+      <div class="col-12">
+        <h5>Sequences</h5>
+        <input class="file" type="file" id="file3" (change)="file_change($event, 'sequences')" accept=".input">
+        <label for="file3" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
         <i class="material-icons">add</i>
       </label>
-      <md-input-container class="container_textarea">
-        <textarea md-input rows="10" [(ngModel)]="text_emissions" readonly></textarea>
-      </md-input-container>
+        <md-input-container class="container_textarea">
+          <textarea md-input rows="10" [(ngModel)]="text_sequences" readonly></textarea>
+        </md-input-container>
+      </div>
+    </div>
+    <!--TRAIN-->
+    <div *ngIf="param == 'train'">
+      <label>Select a file with the correct format. See the examples: <a class="pointer" (click)="example('.trans')">.trans</a>, <a class="pointer" (click)="example('.emit')">.emit</a>, <a class="pointer" (click)="example('.input')">.input</a>, <a class="pointer" (click)="example('.train')">.train</a></label>
+      <div class="grid">
+        <!--Transitions-->
+        <div class="col-3">
+          <h5>Transitions</h5>
+          <input class="file" type="file" id="file1" (change)="file_change($event, 'transitions')" accept=".trans">
+          <label for="file1" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
+        <i class="material-icons">add</i>
+      </label>
+          <md-input-container class="container_textarea">
+            <textarea md-input rows="10" [(ngModel)]="text_transitions" readonly></textarea>
+          </md-input-container>
+        </div>
+        <!--Emissions-->
+        <div class="col-3">
+          <h5>Emissions</h5>
+          <input class="file" type="file" id="file2" (change)="file_change($event, 'emissions')" accept=".emit">
+          <label for="file2" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
+        <i class="material-icons">add</i>
+      </label>
+          <md-input-container class="container_textarea">
+            <textarea md-input rows="10" [(ngModel)]="text_emissions" readonly></textarea>
+          </md-input-container>
+        </div>
+        <!--Sequences-->
+        <div class="col-3">
+          <h5>Sequences</h5>
+          <input class="file" type="file" id="file3" (change)="file_change($event, 'sequences')" accept=".input, .train">
+          <label for="file3" class="import_add mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect">
+        <i class="material-icons">add</i>
+      </label>
+          <md-input-container class="container_textarea">
+            <textarea md-input rows="10" [(ngModel)]="text_sequences" readonly></textarea>
+          </md-input-container>
+        </div>
+      </div>
     </div>
   </md-dialog-content>
   <md-dialog-actions>

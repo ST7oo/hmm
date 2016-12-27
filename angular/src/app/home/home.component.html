@@ -4,7 +4,9 @@
     <!--MODEL-->
     <md-tab label="Model">
       <h2>Model</h2>
-      <button md-raised-button color="primary" (click)="import()">Import</button>
+      <button md-raised-button color="primary" (click)="import('model')">Import</button>
+      <button md-button color="primary" (click)="set_example()">Set example model</button>
+      <button md-button color="warn" (click)="reset('model')">Reset</button>
       <div class="mdl-grid">
         <!--States-->
         <div class="card mdl-card mdl-shadow--2dp">
@@ -133,6 +135,8 @@
     <!--PATH-->
     <md-tab label="Path">
       <h2>Get most probable path using Viterbi</h2>
+      <button md-raised-button color="primary" (click)="import('sequences')">Import</button>
+      <button md-button color="warn" (click)="reset('sequences')">Reset</button>
       <div class="mdl-grid">
         <div class="mdl-cell mdl-cell--7-col">
           <!--Observations-->
@@ -205,6 +209,8 @@
     <!--TRAIN-->
     <md-tab label="Train">
       <h2>Train using Baum-Welch</h2>
+      <button md-raised-button color="primary" (click)="import('train')">Import</button>
+      <button md-button color="warn" (click)="reset('train')">Reset</button>
       <div class="mdl-grid">
         <!--States-->
         <div class="card mdl-card mdl-shadow--2dp">
@@ -307,9 +313,6 @@
               </tbody>
             </table>
           </div>
-          <div class="mdl-card__actions mdl-card--border">
-            <button md-button color="primary" (click)="import()">Import</button>
-          </div>
         </div>
       </div>
       <!--Buttons-->
@@ -349,8 +352,7 @@
             </table>
           </div>
           <div class="mdl-card__actions mdl-card--border">
-            <button md-button color="primary" (click)="export(true)">Export as .json</button>
-            <button md-button color="primary" (click)="export(false)">Export as .trans</button>
+            <button md-button color="primary" (click)="export('.trans')">Export as .trans</button>
           </div>
         </div>
         <!--B trained-->
@@ -377,8 +379,7 @@
             </table>
           </div>
           <div class="mdl-card__actions mdl-card--border">
-            <button md-button color="primary" (click)="export(true)">Export as .json</button>
-            <button md-button color="primary" (click)="export(false)">Export as .emit</button>
+            <button md-button color="primary" (click)="export('.emit')">Export as .emit</button>
           </div>
         </div>
       </div>

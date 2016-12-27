@@ -10,7 +10,9 @@ import { MdDialogRef } from '@angular/material';
 export class ImportDialog {
   text_transitions: string = '';
   text_emissions: string = '';
+  text_sequences: string = '';
   message: string;
+  param: string;
 
   constructor(public dialogRef: MdDialogRef<ImportDialog>, private http: Http) { }
 
@@ -27,6 +29,8 @@ export class ImportDialog {
         this.text_transitions = result;
       } else if (variable == 'emissions') {
         this.text_emissions = result;
+      } else if (variable == 'sequences') {
+        this.text_sequences = result;
       }
     };
     reader.readAsText(file);
@@ -38,8 +42,18 @@ export class ImportDialog {
       if (format == '.trans') {
         this.text_transitions = data;
         this.text_emissions = '';
+        this.text_sequences = '';
       } else if (format == '.emit') {
         this.text_emissions = data;
+        this.text_transitions = '';
+        this.text_sequences = '';
+      } else if (format == '.input') {
+        this.text_sequences = data;
+        this.text_emissions = '';
+        this.text_transitions = '';
+      } else if (format == '.train') {
+        this.text_sequences = data;
+        this.text_emissions = '';
         this.text_transitions = '';
       }
     });
@@ -47,6 +61,30 @@ export class ImportDialog {
 
   import() {
     this.message = '';
+    let regexp = /\t|\s|,/;
+    if (this.param == 'model') {
+      let model = this.import_model(regexp);
+      if (Object.keys(model).length > 0) {
+        this.dialogRef.close(model);
+      }
+    } else if (this.param == 'sequences') {
+      let sequences = this.import_sequences(regexp);
+      if (sequences.length > 0) {
+        this.dialogRef.close(sequences);
+      }
+    } else if (this.param == 'train') {
+      let model = this.import_model(regexp);
+      if (Object.keys(model).length > 0) {
+        let sequences = this.import_sequences(regexp);
+        if (sequences.length > 0) {
+          model['train_seq'] = sequences;
+          this.dialogRef.close(model);
+        }
+      }
+    }
+  }
+
+  private import_model(regexp: RegExp): Object {
     if (this.text_transitions.length > 0 && this.text_emissions.length > 0) {
       let A = [];
       let B = [];
@@ -54,10 +92,10 @@ export class ImportDialog {
       let observations = [];
       // Transitions
       let states_set = new Set();
-      let lines = this.text_transitions.split('\n');
+      let lines = this.text_transitions.split('\n').filter(x => x.length > 0);
       // get states
       for (let line of lines) {
-        let columns = line.split(/\t|\s\s\s\s/);
+        let columns = line.split(regexp).filter(x => x.length > 0);
         if (columns.length == 3) {
           states_set.add(columns[0]);
           states_set.add(columns[1]);
@@ -71,7 +109,7 @@ export class ImportDialog {
         }
         // get probabilities
         for (let line of lines) {
-          let columns = line.split(/\t|\s\s\s\s/);
+          let columns = line.split(regexp).filter(x => x.length > 0);
           if (columns.length == 3) {
             if (this.is_probability(columns[2])) {
               A[states.indexOf(columns[0])][states.indexOf(columns[1])] = parseFloat(columns[2]);
@@ -82,10 +120,10 @@ export class ImportDialog {
         }
         // Emissions
         let observations_set = new Set();
-        lines = this.text_emissions.split('\n');
+        lines = this.text_emissions.split('\n').filter(x => x.length > 0);
         // get observations
         for (let line of lines) {
-          let columns = line.split('\t');
+          let columns = line.split(regexp).filter(x => x.length > 0);
           if (columns.length == 3) {
             observations_set.add(columns[1]);
           }
@@ -98,7 +136,7 @@ export class ImportDialog {
           }
           // get probabilities
           for (let line of lines) {
-            let columns = line.split('\t');
+            let columns = line.split(regexp).filter(x => x.length > 0);
             if (columns.length == 3) {
               if (this.is_probability(columns[2])) {
                 B[states.indexOf(columns[0])][observations.indexOf(columns[1])] = parseFloat(columns[2]);
@@ -120,13 +158,34 @@ export class ImportDialog {
           A: A,
           B: B
         };
-        this.dialogRef.close(model);
+        return model;
       } else {
         this.message = 'The model is incorrect. See the examples.'
       }
     } else {
       this.message = 'Transitions or Emissions cannot be empty';
     }
+    return {};
+  }
+
+  private import_sequences(regexp: RegExp): Array<string[]> {
+    if (this.text_sequences.length > 0) {
+      let sequences = [];
+      let lines = this.text_sequences.split('\n').filter(x => x.length > 0);
+      for (let line of lines) {
+        let columns = line.split(regexp).filter(x => x.length > 0);
+        sequences.push(columns);
+      }
+      if (sequences.length > 0) {
+        return sequences;
+      }
+      else {
+        this.message = 'The file is incorrect. See the examples.'
+      }
+    } else {
+      this.message = 'Select a file with sequences.';
+    }
+    return [];
   }
 
   private is_probability(num: string) {

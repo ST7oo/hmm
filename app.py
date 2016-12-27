@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, redirect, url_for
 import json
 from hmm_model.HMM import HMM
 # crossdomain
@@ -14,12 +14,20 @@ def index():
     return render_template('index.html')
 
 
+@app.route("/web/")
+def web():
+    return redirect(url_for('index'))
+
+
 @app.route('/gen/<params>')
 def gen(params):
     d = json.loads(params)
     try:
-        h = HMM(d['A'], d['B'], d['states'], d['observations'])
-        resp = jsonify(data=h.gen_sequence(d['num']))
+        if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
+            h = HMM(d['A'], d['B'], d['states'], d['observations'])
+            resp = jsonify(data=h.gen_sequence(d['num']))
+        else:
+            resp = jsonify(error='Incomplete model')
     except ValueError as e:
         resp = jsonify(error=str(e))
     return resp
@@ -29,8 +37,11 @@ def gen(params):
 def viterbi(params):
     d = json.loads(params)
     try:
-        h = HMM(d['A'], d['B'], d['states'], d['observations'])
-        resp = jsonify(data=h.viterbi(d['seq']))
+        if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
+            h = HMM(d['A'], d['B'], d['states'], d['observations'])
+            resp = jsonify(data=h.viterbi(d['seq']))
+        else:
+            resp = jsonify(error='Incomplete model')
     except ValueError as e:
         resp = jsonify(error=str(e))
     return resp
@@ -40,15 +51,18 @@ def viterbi(params):
 def train(params):
     d = json.loads(params)
     try:
-        h = HMM(d['A'], d['B'], d['states'], d['observations'])
-        max_iter = d['max_iter'] if 'max_iter' in d else 20
-        h_trained, iters = h.baum_welch(d['seq'], max_iter)
-        trained = {
-            'A': h_trained.A.tolist(),
-            'B': h_trained.B.tolist(),
-            'iters': str(iters)
-        }
-        resp = jsonify(data=trained)
+        if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
+            h = HMM(d['A'], d['B'], d['states'], d['observations'])
+            max_iter = d['max_iter'] if 'max_iter' in d else 20
+            h_trained, iters = h.baum_welch(d['seq'], max_iter)
+            trained = {
+                'A': h_trained.A.tolist(),
+                'B': h_trained.B.tolist(),
+                'iters': str(iters)
+            }
+            resp = jsonify(data=trained)
+        else:
+            resp = jsonify(error='Incomplete model')
     except ValueError as e:
         resp = jsonify(error=str(e))
     except KeyError as e:

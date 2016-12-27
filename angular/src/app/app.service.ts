@@ -14,6 +14,8 @@ export class HMMService {
   path: string[][];
   path_probabilities: number[];
   train_seq: string[][];
+  // host = '/'; // prod
+  host = 'http://localhost:5000/'; // dev
 
   constructor(private http: Http) {
     this.mock_data();
@@ -30,14 +32,25 @@ export class HMMService {
       this.B_ini = data.B_ini;
       this.sequences = data.sequences;
       this.train_seq = data.train_seq;
-      // this.initialize_matrix(true, true);
-      this.path = [];
-      this.path_probabilities = [];
-      for (let s of this.sequences) {
-        this.path.push(new Array(s.length).fill('...'));
-        this.path_probabilities.push(0);
-      }
+      this.initialize_path();
     });
+  }
+
+  reset(param: string) {
+    if (param == 'model') {
+      this.states = [];
+      this.observations = [];
+      this.A = [[]];
+      this.B = [[]];
+    } else if (param == 'sequences') {
+      this.sequences = [];
+    } else if (param == 'train') {
+      this.states = [];
+      this.observations = [];
+      this.A_ini = [[]];
+      this.B_ini = [[]];
+      this.train_seq = [];
+    }
   }
 
   initialize_matrix(a: boolean, b: boolean, random?: boolean) {
@@ -77,8 +90,21 @@ export class HMMService {
     }
   }
 
+  initialize_path() {
+    this.path = [];
+    this.path_probabilities = [];
+    for (let s of this.sequences) {
+      this.path.push(new Array(s.length).fill('...'));
+      this.path_probabilities.push(0);
+    }
+  }
+
+  get_state(i: number) {
+    return this.states[i];
+  }
+
   get_observation(i: number) {
-    return this.observations[i.valueOf()];
+    return this.observations[i];
   }
 
   set_states(states: string[]) {
@@ -89,12 +115,29 @@ export class HMMService {
     this.observations = observations;
   }
 
+  set_sequences(sequences: string[][]) {
+    this.sequences = sequences;
+    this.initialize_path();
+  }
+
+  set_train_seq(sequences: string[][]) {
+    this.train_seq = sequences;
+  }
+
   set_A(A: number[][]) {
     this.A = A;
   }
 
   set_B(B: number[][]) {
     this.B = B;
+  }
+
+  set_A_ini(A: number[][]) {
+    this.A_ini = A;
+  }
+
+  set_B_ini(B: number[][]) {
+    this.B_ini = B;
   }
 
   insert_state(state: string) {
@@ -138,13 +181,13 @@ export class HMMService {
   generate_sequence(num: number) {
     let data = this.prepare_model();
     data['num'] = num;
-    return this.http.get('http://localhost:5000/gen/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
+    return this.http.get(this.host + 'gen/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
   }
 
   viterbi() {
     let data = this.prepare_model();
     data['seq'] = this.sequences;
-    return this.http.get('http://localhost:5000/viterbi/' + JSON.stringify(data)).map(res => {
+    return this.http.get(this.host + 'viterbi/' + JSON.stringify(data)).map(res => {
       let r = res.json();
       if (r.data) {
         let path = [];
@@ -166,7 +209,7 @@ export class HMMService {
     let data = this.prepare_model(true);
     data['seq'] = this.train_seq;
     data['max_iter'] = max_iter;
-    return this.http.get('http://localhost:5000/train/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
+    return this.http.get(this.host + 'train/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
   }
 
   private prepare_model(ini?: boolean) {
@@ -195,13 +238,7 @@ export class HMMService {
     return model;
   }
 
-  private extract_data(res: Response) {
-    let body = res.json();
-    return body.data || body.error || {};
-  }
-
   private handleError(error: Response | any) {
-    // In a real world app, we might use a remote logging infrastructure
     let errMsg: string;
     if (error instanceof Response) {
       const body = error.json() || '';
