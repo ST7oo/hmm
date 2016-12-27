@@ -26,8 +26,8 @@ const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin');
 const HMR = helpers.hasProcessFlag('hot');
 const METADATA = {
   title: 'Hidden Markov Model Interactive',
-  // baseUrl: '/web/',
-  baseUrl: '/',
+  baseUrl: '/web/',
+  // baseUrl: '/',
   isDevServer: helpers.isWebpackDevServer()
 };
 

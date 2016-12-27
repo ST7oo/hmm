@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http, Response } from '@angular/http';
+import { Http, Response, Headers } from '@angular/http';
 import { Observable } from 'rxjs/Rx';
 
 @Injectable()
@@ -14,11 +14,20 @@ export class HMMService {
   path: string[][];
   path_probabilities: number[];
   train_seq: string[][];
-  // host = '/'; // prod
-  host = 'http://localhost:5000/'; // dev
+  host: string;
+  headers: Headers;
+  // env = 'dev';
+  env = 'prod';
 
   constructor(private http: Http) {
     this.mock_data();
+    this.headers = new Headers();
+    this.headers.append('Content-Type', 'application/json');
+    if (this.env == 'prod') {
+      this.host = '/';
+    } else {
+      this.host = 'http://localhost:5000/';
+    }
   }
 
   mock_data() {
@@ -181,35 +190,65 @@ export class HMMService {
   generate_sequence(num: number) {
     let data = this.prepare_model();
     data['num'] = num;
-    return this.http.get(this.host + 'gen/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
+    let json_data = JSON.stringify(data);
+    if (this.env == 'prod') {
+      return this.http.post(this.host + 'gen', json_data, { headers: this.headers }).map(this.handle_response).catch(this.handle_error);
+    } else {
+      return this.http.get(this.host + 'gen?data=' + json_data).map(this.handle_response).catch(this.handle_error);
+    }
   }
 
   viterbi() {
     let data = this.prepare_model();
     data['seq'] = this.sequences;
-    return this.http.get(this.host + 'viterbi/' + JSON.stringify(data)).map(res => {
-      let r = res.json();
-      if (r.data) {
-        let path = [];
-        let probabilities = [];
-        for (let s of r.data) {
-          path.push(s[0]);
-          probabilities.push(s[1]);
+    let json_data = JSON.stringify(data);
+    if (this.env == 'prod') {
+      return this.http.post(this.host + 'viterbi', json_data, { headers: this.headers }).map(res => {
+        let r = res.json();
+        if (r.data) {
+          let path = [];
+          let probabilities = [];
+          for (let s of r.data) {
+            path.push(s[0]);
+            probabilities.push(s[1]);
+          }
+          this.path = path;
+          this.path_probabilities = probabilities;
+          return { data: true };
+        } else {
+          return r;
         }
-        this.path = path;
-        this.path_probabilities = probabilities;
-        return { data: true };
-      } else {
-        return r;
-      }
-    }).catch(this.handleError);
+      }).catch(this.handle_error);
+    } else {
+      return this.http.get(this.host + 'viterbi?data=' + json_data).map(res => {
+        let r = res.json();
+        if (r.data) {
+          let path = [];
+          let probabilities = [];
+          for (let s of r.data) {
+            path.push(s[0]);
+            probabilities.push(s[1]);
+          }
+          this.path = path;
+          this.path_probabilities = probabilities;
+          return { data: true };
+        } else {
+          return r;
+        }
+      }).catch(this.handle_error);
+    }
   }
 
   train(max_iter: number) {
     let data = this.prepare_model(true);
     data['seq'] = this.train_seq;
     data['max_iter'] = max_iter;
-    return this.http.get(this.host + 'train/' + JSON.stringify(data)).map(res => res.json()).catch(this.handleError);
+    let json_data = JSON.stringify(data);
+    if (this.env == 'prod') {
+      return this.http.post(this.host + 'train', json_data, { headers: this.headers }).map(this.handle_response).catch(this.handle_error);
+    } else {
+      return this.http.get(this.host + 'train?data=' + json_data).map(this.handle_response).catch(this.handle_error);
+    }
   }
 
   private prepare_model(ini?: boolean) {
@@ -238,7 +277,17 @@ export class HMMService {
     return model;
   }
 
-  private handleError(error: Response | any) {
+  private handle_response(res: Response) {
+    let ret;
+    try {
+      ret = res.json();
+    } catch (error) {
+      ret = { error: 'Unexpected error' }
+    }
+    return ret;
+  }
+
+  private handle_error(error: Response | any) {
     let errMsg: string;
     if (error instanceof Response) {
       const body = error.json() || '';
@@ -247,7 +296,7 @@ export class HMMService {
     } else {
       errMsg = error.message ? error.message : error.toString();
     }
-    console.error(errMsg);
+    // console.error(errMsg);
     return Observable.throw(errMsg);
   }
 

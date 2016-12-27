@@ -170,6 +170,9 @@ export class HomeComponent {
       } else {
         this.error_generate = 'Unexpected error ocurred.';
       }
+    }, error => {
+      console.log(error);
+      this.error_generate = 'Unexpected error ocurred.';
     });
   }
 
@@ -186,6 +189,9 @@ export class HomeComponent {
           this.error_viterbi = 'Unexpected error ocurred.';
         }
       }
+    }, error => {
+      console.log(error);
+      this.error_viterbi = 'Unexpected error ocurred.';
     });
   }
 
@@ -209,6 +215,10 @@ export class HomeComponent {
         this.error_train = 'Unexpected error ocurred.';
         this.trained = false;
       }
+      this.calculating_train = false;
+    }, error => {
+      console.log(error);
+      this.error_train = 'Unexpected error ocurred.';
       this.calculating_train = false;
     });
   }

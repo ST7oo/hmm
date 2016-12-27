@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, redirect, url_for
+from flask import Flask, render_template, jsonify, redirect, url_for, request
 import json
 from hmm_model.HMM import HMM
 # crossdomain
@@ -19,9 +19,12 @@ def web():
     return redirect(url_for('index'))
 
 
-@app.route('/gen/<params>')
-def gen(params):
-    d = json.loads(params)
+@app.route('/gen', methods=['GET', 'POST', 'OPTIONS'])
+def gen():
+    if request.method == 'GET':
+        d = json.loads(request.args.getlist('data')[0])
+    else:
+        d = request.get_json()
     try:
         if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
             h = HMM(d['A'], d['B'], d['states'], d['observations'])
@@ -33,9 +36,12 @@ def gen(params):
     return resp
 
 
-@app.route('/viterbi/<params>')
-def viterbi(params):
-    d = json.loads(params)
+@app.route('/viterbi', methods=['GET', 'POST', 'OPTIONS'])
+def viterbi():
+    if request.method == 'GET':
+        d = json.loads(request.args.getlist('data')[0])
+    else:
+        d = request.get_json()
     try:
         if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
             h = HMM(d['A'], d['B'], d['states'], d['observations'])
@@ -47,9 +53,12 @@ def viterbi(params):
     return resp
 
 
-@app.route('/train/<params>')
-def train(params):
-    d = json.loads(params)
+@app.route('/train', methods=['GET', 'POST', 'OPTIONS'])
+def train():
+    if request.method == 'GET':
+        d = json.loads(request.args.getlist('data')[0])
+    else:
+        d = request.get_json()
     try:
         if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
             h = HMM(d['A'], d['B'], d['states'], d['observations'])
