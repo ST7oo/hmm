@@ -9,7 +9,7 @@ import { ImportDialog } from '../import-dialog';
   templateUrl: './home.component.html'
 })
 export class HomeComponent {
-  iters: number;
+  iterations: number;
   error_generate: string;
   error_viterbi: string;
   error_train: string;
@@ -206,7 +206,7 @@ export class HomeComponent {
       if (r.data) {
         this.A_trained = r.data.A;
         this.B_trained = r.data.B;
-        this.iters = r.data.iters;
+        this.iterations = r.data.iterations;
         this.trained = true;
       } else if (r.error) {
         this.error_train = r.error;
