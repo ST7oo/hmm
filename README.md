@@ -8,7 +8,7 @@ Hidden Markov Model implemented in python with a web interface using Flask/Angul
 
  - Install Python
  - Install Node.js
- - (Optional) Install Yarn (otherwise replace `yarn` for `npm`)
+ - (Optionally) Install Yarn (otherwise replace `yarn` for `npm`)
  - Clone repository
  - Install dependencies
 	 - `pip install -r requirements.txt`
@@ -17,14 +17,14 @@ Hidden Markov Model implemented in python with a web interface using Flask/Angul
  - Change the files:
 	 - `angular/config/webpack.common.js` line 29 should be `baseUrl: '/'`
 	 - `angular/src/app/app.service.ts` line 19 should be `env = 'dev'`
- - Run the frontend server
+ - Run the frontend server (in the `angular` folder)
 	 - `yarn start`
- - Run the backend server in debug mode
+ - In another terminal run the backend server in debug mode
 	 - `cd ..`
 	 - `export FLASK_APP=app.py`
 	 - `export FLASK_DEBUG=1`
 	 - `flask run`
- - The app is running http://localhost:3000/
+ - The app is running at http://localhost:3000/
 
 ### Deployment
  - Change the files:
