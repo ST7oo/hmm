@@ -1,8 +1,10 @@
 # Hidden Markov Model Interactive
 
-Hidden Markov Model implemented in python with a web interface using Flask/Angular 2.
+Hidden Markov Model implemented in Python 3.5 with a web interface using Flask (back-end) and Angular 2 (front-end).
 
 > [Live demo](https://hmm-interactive.herokuapp.com/)
+
+The logic of the Hidden Markov Model is in `hmm_model/HMM.py`.
 
 ### Development
 
@@ -24,7 +26,7 @@ Hidden Markov Model implemented in python with a web interface using Flask/Angul
 	 - `export FLASK_APP=app.py`
 	 - `export FLASK_DEBUG=1`
 	 - `flask run`
- - The app is running at http://localhost:3000/
+ - The app runs at http://localhost:3000/
 
 ### Deployment
  - Change the files:

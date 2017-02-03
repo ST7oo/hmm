@@ -27,7 +27,7 @@ def gen():
         d = request.get_json()
     try:
         if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
-            h = HMM(d['A'], d['B'], d['states'], d['observations'])
+            h = HMM(d['states'], d['observations'], d['A'], d['B'])
             resp = jsonify(data=h.gen_sequence(d['num']))
         else:
             resp = jsonify(error='Incomplete model')
@@ -44,7 +44,7 @@ def viterbi():
         d = request.get_json()
     try:
         if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
-            h = HMM(d['A'], d['B'], d['states'], d['observations'])
+            h = HMM(d['states'], d['observations'], d['A'], d['B'])
             resp = jsonify(data=h.viterbi(d['seq']))
         else:
             resp = jsonify(error='Incomplete model')
@@ -61,7 +61,7 @@ def train():
         d = request.get_json()
     try:
         if len(d['states']) > 1 and len(d['observations']) > 1 and len(d['A']) > 1 and len(d['A'][0]) > 1 and len(d['B']) > 1 and len(d['B'][0]) > 1:
-            h = HMM(d['A'], d['B'], d['states'], d['observations'])
+            h = HMM(d['states'], d['observations'], d['A'], d['B'])
             max_iter = d['max_iter'] if 'max_iter' in d else 20
             iterations = h.baum_welch(d['seq'], max_iter)
             trained = {

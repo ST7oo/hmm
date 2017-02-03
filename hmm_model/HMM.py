@@ -19,22 +19,28 @@ class HMM:
         baum_welch(observations, max_iter)
     """
 
-    def __init__(self, A, B, name_states, name_observations):
+    def __init__(self, name_states, name_observations, A=None, B=None):
         """
         Constructor.
 
         Args:
-            A (float[][]): Transitions matrix.
-            B (float[][]): Emissions matrix.
             name_states (str[]): Labels of states.
             name_observations (str[]): Labels of observations.
+            A (float[][], optional): Transitions matrix. If not passed, random initialization.
+            B (float[][], optional): Emissions matrix. If not passed, random initialization.
         """
-        self.A = np.array(A)
-        self.B = np.array(B)
         self.name_states = name_states
         self.name_observations = name_observations
         self.N = len(name_states)
         self.M = len(name_observations)
+        if A:
+            self.A = np.array(A)
+        else:
+            self._initialize('A')
+        if B:
+            self.B = np.array(B)
+        else:
+            self._initialize('B')
 
 
     def gen_sequence(self, num_sequences=1):
@@ -210,8 +216,10 @@ class HMM:
             print(log_likelihood)
             iter += 1
 
-        # correct final silent state
+        # correct probability of final silent state
         self.A[self.N - 2, self.N - 1] = 1 - self.A[self.N - 2].sum()
+        # normalize the probabilities
+        self.A[:-2] = self.A[:-2] / self.A[:-2].sum(1).reshape((-1, 1))
 
         return iter
 
@@ -234,7 +242,10 @@ class HMM:
         # forward
         # initial step
         alpha[:, 0] = self.A[0, :] * self.B[:, index_obs[0]]
-        factor[0] = 1.0 / np.sum(alpha[:, 0])
+        if np.sum(alpha[:, 0]) > 0:
+            factor[0] = 1.0 / np.sum(alpha[:, 0])
+        else:
+            factor[0] = 1.0
         alpha[:, 0] *= factor[0]
         # inductive step
         for t in np.arange(1, T):
@@ -274,38 +285,17 @@ class HMM:
             y.append(self.name_observations.index(o))
         return y
 
-
-            # def forward(self, observations):
-    #     # sequences = []
-    #     # for i in np.arange(len(observations)):
-    #     T = len(observations)
-    #     c = np.zeros([T])
-    #     alpha = np.zeros([self.N, T])
-    #     index_obs = self._index_observations(observations)
-    #     alpha[:, 0] = self.A[0, :] * self.B[:, index_obs[0]]
-    #     c[0] = 1.0 / np.sum(alpha[:, 0])
-    #     alpha[:, 0] *= c[0]
-    #     for t in np.arange(1, T):
-    #         alpha[:, t] = np.dot(
-    #             alpha[:, t - 1], self.A) * self.B[:, index_obs[t]]
-    #         c[t] = 1.0 / np.sum(alpha[:, t])
-    #         alpha[:, t] *= c[t]
-    #     log_prob_obs = -(np.sum(np.log(c)))
-    #     return alpha, log_prob_obs, c
-    #     # sequences.append((alpha, log_prob_obs, c))
-    #     # return sequences
-
-    # def backward(self, observations, c):
-    #     # sequences = []
-    #     # for i in np.arange(len(observations)):
-    #     T = len(observations)
-    #     index_obs = self._index_observations(observations)
-    #     beta = np.zeros([self.N, T])
-    #     beta[:, T - 1] = c[T - 1]
-    #     for t in np.arange(T - 1, 0, -1):
-    #         beta[:, t - 1] = np.dot(self.A,
-    #                                 self.B[:, index_obs[t]] * beta[:, t])
-    #         beta[:, t - 1] *= c[t - 1]
-    #     return beta
-    #     #     sequences.append(beta)
-    #     # return sequences
+    def _initialize(self, matrix):
+        """Initialize A or B with random probabilities"""
+        if matrix == 'A':
+            A = np.zeros([self.N, self.N])
+            for i in np.arange(self.N):
+                for j in np.arange(self.N):
+                    A[i, j] = np.random.rand()
+            self.A = A / A.sum(1).reshape((-1, 1))
+        if matrix == 'B':
+            B = np.zeros([self.N, self.M])
+            for i in np.arange(self.N):
+                for j in np.arange(self.M):
+                    B[i, j] = np.random.rand()
+            self.B = B / B.sum(1).reshape((-1, 1))

@@ -74,11 +74,21 @@ export class ImportDialog {
       }
     } else if (this.param == 'train') {
       let model = this.import_model(regexp);
-      if (Object.keys(model).length > 0) {
+      if (this.text_transitions.length == 0 && this.text_emissions.length == 0) {
         let sequences = this.import_sequences(regexp);
         if (sequences.length > 0) {
-          model['train_seq'] = sequences;
+          model = {
+            train_seq: sequences
+          };
           this.dialogRef.close(model);
+        }
+      } else {
+        if (Object.keys(model).length > 0) {
+          let sequences = this.import_sequences(regexp);
+          if (sequences.length > 0) {
+            model['train_seq'] = sequences;
+            this.dialogRef.close(model);
+          }
         }
       }
     }

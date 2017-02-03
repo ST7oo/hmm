@@ -1,5 +1,4 @@
 import numpy as np
-import timeit
 from HMM import HMM
 
 states = ['INIT', 'Onset', 'Mid', 'End', 'FINAL']
@@ -178,21 +177,13 @@ seq_train = [['C1', 'C4', 'C6', 'C7', 'C6'],
              ['C2', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4', 'C4',
               'C4', 'C4', 'C4', 'C3', 'C4', 'C4', 'C3', 'C7'],
              ['C1', 'C3', 'C2', 'C4', 'C4', 'C6', 'C7', 'C7']]
-h = HMM(A, B, states, observations)
+
+
+h = HMM(states, observations, A, B)
 # print(h.gen_sequence(3))
 print(h.viterbi(seq))
-# print(h.forward(seq))
-# h1 = HMM(A_ini, B_ini, states, observations)
+# h1 = HMM(states, observations, A_ini, B_ini)
 # epochs = h1.baum_welch(seq_train)
 # print('epochs', epochs)
 # print('A', h1.A)
 # print('B', h1.B)
-# print(h1.A.sum(1))
-# print(h1.B.sum(1))
-# t = timeit.Timer(lambda: HMM(A_ini, B_ini, states, observations).baum_welch(seq_train))
-# t = timeit.Timer(lambda: HMM(A_ini, B_ini, states, observations).forward(seq[0]))
-# print(t.timeit(number=100))
-# 21.494664558002114
-# 20.40747640599875
-# 20.855567466001958
-# 20.431506337001338

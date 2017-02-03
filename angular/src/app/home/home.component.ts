@@ -45,11 +45,15 @@ export class HomeComponent {
         } else if (param == 'sequences') {
           this.hmm.set_sequences(res);
         } else if (param == 'train') {
-          this.hmm.set_states(res.states);
-          this.hmm.set_observations(res.observations);
-          this.hmm.set_A_ini(res.A);
-          this.hmm.set_B_ini(res.B);
-          this.hmm.set_train_seq(res.train_seq);
+          if (Object.keys(res).length > 1) {
+            this.hmm.set_states(res.states);
+            this.hmm.set_observations(res.observations);
+            this.hmm.set_A_ini(res.A);
+            this.hmm.set_B_ini(res.B);
+            this.hmm.set_train_seq(res.train_seq);
+          } else {
+            this.hmm.set_train_seq(res.train_seq);
+          }
         }
       }
     })
